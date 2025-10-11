@@ -1,0 +1,158 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #8bb8a1;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* ----- ISQUIERDA  ----- */
+.left {
+  flex: 1;
+  background-color: #121212;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.left h2 {
+  color: #F5F5F5;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.left h3 {
+  color: #F5F5F5;
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.left p {
+  color: #F5F5F5;
+  margin-bottom: 30px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+form label {
+  font-size: 14px;
+  color: #F5F5F5;
+  margin-bottom: 5px;
+}
+
+form input {
+  padding: 10px;
+  border: 1px solid #F5F5F5;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.options a {
+  text-decoration: none;
+  color: #F5F5F5;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.login {
+  background-color: #E50914;
+  color: #fff;
+}
+
+.signup {
+  background-color: #fff;
+  color: #0056ff;
+  border: 1px solid #E50914;
+}
+
+.social-text {
+  margin: 20px 0 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.social-links a {
+  text-decoration: none;
+  color: #E50914;
+  font-weight: 500;
+}
+
+/* ----- DERECHA ----- */
+.right {
+  flex: 1;
+  background-color: #0c0b0b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+nav {
+  position: absolute;
+  top: 40px;
+  display: flex;
+  gap: 30px;
+}
+
+nav a {
+  text-decoration: none;
+  color: #e13c3c;
+  font-weight: 500;
+}
+
+nav a.active {
+  border-bottom: 2px solid #c24921;
+  color: #ff3300;
+}
+
+.right img {
+  width: 350px;
+  height: auto;
+}
+.right img,
+.img-emocional {
+  width: 600px;        
+  height: auto;        
+  border-radius: 25px; /* bordes */
+  display: block;
+  margin: 40px auto;
+  object-fit: cover;
+}
