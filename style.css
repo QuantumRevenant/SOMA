@@ -14,10 +14,10 @@ body {
   height: 100vh;
 }
 
-/* ----- ISQUIERDA  ----- */
+/* ----- LEFT SIDE ----- */
 .left {
   flex: 1;
-  background-color: #121212;
+  background-color: #f3f4f7;
   padding: 60px;
   display: flex;
   flex-direction: column;
@@ -25,19 +25,19 @@ body {
 }
 
 .left h2 {
-  color: #F5F5F5;
+  color: #0056ff;
   font-size: 24px;
   margin-bottom: 20px;
 }
 
 .left h3 {
-  color: #F5F5F5;
+  color: #222;
   font-size: 22px;
   margin-bottom: 10px;
 }
 
 .left p {
-  color: #F5F5F5;
+  color: #555;
   margin-bottom: 30px;
 }
 
@@ -48,13 +48,13 @@ form {
 
 form label {
   font-size: 14px;
-  color: #F5F5F5;
+  color: #333;
   margin-bottom: 5px;
 }
 
 form input {
   padding: 10px;
-  border: 1px solid #F5F5F5;
+  border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 15px;
 }
@@ -68,7 +68,7 @@ form input {
 
 .options a {
   text-decoration: none;
-  color: #F5F5F5;
+  color: #0056ff;
 }
 
 .buttons {
@@ -85,14 +85,14 @@ button {
 }
 
 .login {
-  background-color: #E50914;
+  background-color: #0056ff;
   color: #fff;
 }
 
 .signup {
   background-color: #fff;
   color: #0056ff;
-  border: 1px solid #E50914;
+  border: 1px solid #0056ff;
 }
 
 .social-text {
@@ -110,14 +110,14 @@ button {
 
 .social-links a {
   text-decoration: none;
-  color: #E50914;
+  color: #0056ff;
   font-weight: 500;
 }
 
-/* ----- DERECHA ----- */
+/* ----- RIGHT SIDE ----- */
 .right {
   flex: 1;
-  background-color: #0c0b0b;
+  background-color: #fafafa;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -134,24 +134,25 @@ nav {
 
 nav a {
   text-decoration: none;
-  color: #e13c3c;
+  color: #555;
   font-weight: 500;
 }
 
 nav a.active {
-  border-bottom: 2px solid #c24921;
-  color: #ff3300;
+  border-bottom: 2px solid #0056ff;
+  color: #0056ff;
 }
 
 .right img {
   width: 350px;
   height: auto;
 }
+
 .right img,
 .img-emocional {
-  width: 600px;        
-  height: auto;        
-  border-radius: 25px; /* bordes */
+  width: 600px;
+  height: auto;
+  border-radius: 25px;
   display: block;
   margin: 40px auto;
   object-fit: cover;

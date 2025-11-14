@@ -1,39 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Page</title>
+  <title>SOMA - Plataforma Educativa</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="container">
     <div class="left">
-      <h2>SOMA WEB</h2>
-      <h3>Sistema de Orientación y Monitoreo Académico-emocional</h3>
+      <h2>Nuestro sitio web</h2>
+      <h3>Sistema de Monitoreo Académico-Emocional</h3>
       <p>Welcome back!</p>
 
-      <!-- FORMULARIO  -->
       <form id="loginForm">
-        <label>Correo</label>
-        <input type="email" id="email" placeholder="Usuario@email.com" required>
+        <label>Email Address</label>
+        <input type="email" placeholder="example@email.com" required>
 
-        <label>Contraseña</label>
-        <input type="password" id="password" placeholder="********" required>
-
-         <!-- Mensaje de error DE CONTRASEÑA -->
-        <p id="error-message" style="color:red; display:none;">Usuario o contraseña incorrectos</p>
+        <label>Password</label>
+        <input type="password" placeholder="********" required>
 
         <div class="options">
           <label><input type="checkbox"> Remember Me</label>
-          <a href="#">Restablecer contraseña</a>
+          <a href="#">Forgot Password?</a>
         </div>
 
         <div class="buttons">
-          <button type="submit" class="login">Iniciar sesión</button>
+          <button type="submit" class="login">Login</button>
+          <button type="button" class="signup">Sign Up</button>
         </div>
 
-      
         <p class="social-text">Or login with</p>
         <div class="social-links">
           <a href="#">Facebook</a>
@@ -45,37 +43,21 @@
 
     <div class="right">
       <nav>
-        <a href="#" class="active">Estudiante</a>
-        <a href="#">Psicólogo</a>
-        <a href="#">Administrador</a>
-        <a href="#">Docente</a>
+        <!-- AHORA SON SOLO SELECTORES. NO ABREN NADA. -->
+        <a href="#" data-role="docente">Docente</a>
+        <a href="#" data-role="psicologo">Psicólogo</a>
+        <a href="#" data-role="coordinador">Coordinador</a>
+        <a href="#" data-role="administrador">Administrador</a>
+        <a href="#" data-role="estudiante">Estudiante</a>
       </nav>
+
       <img src="https://www.apega.org/wp-content/uploads/2020/10/educacion-emocional.jpg"
-           alt="Educación Emocional"
-           class="img-emocional">
+        alt="Educación Emocional" class="img-emocional">
     </div>
   </div>
 
-  <!-- codificacion para el LOGIN -->
-  <script>
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-      event.preventDefault(); // evita recargar la página
+  <script src="auth.js"></script>
 
-      // Datos ingresados
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      // Usuario y contraseña válidos (SE PUEDE CAMBIAR)
-      const validUser = "juan@email.com";
-      const validPassword = "12345";
-
-      // Verificación
-      if (email === validUser && password === validPassword) {
-        window.location.href = "home.html"; // redirige a otra página
-      } else {
-        document.getElementById("error-message").style.display = "block";
-      }
-    });
-  </script>
 </body>
+
 </html>
