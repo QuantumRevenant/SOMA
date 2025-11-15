@@ -12,38 +12,17 @@
     <script src="../../auth.js"></script>
     <script>
         const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
+
         if (!t.logged) location.href = "../../index.html";
-        if (t.role !== "estudiante") location.href = "../../index.html";
 
-        function getHomeByRole(role) {
-            const routes = {
-                "estudiante": "../estudiante/estudiante.html",
-                "docente": "../docente/docente.html",
-                "psicologo": "../psicologo/psicologo.html",
-                "coordinador": "../coordinador/coordinador.html",
-                "admin": "../administrador/admin.html"
-            };
-            return routes[role] || "../../index.html";
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const name = t.name || "Estudiante";
-            const initials = name
-                .split(" ")
-                .map(w => w[0])
-                .join("")
-                .slice(0, 2)
-                .toUpperCase();
-
-            document.getElementById("user-name").textContent = name;
-            document.getElementById("user-avatar").textContent = initials;
-        });
+        const REQUIRED_ROLE = "estudiante";
+        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
     </script>
 
     <div class="header">
-        <div class="logo" style="cursor:pointer" onclick="location.href = getHomeByRole(t.role)">
-            SOMA
-        </div>
+        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
+    SOMA
+</div>
 
         <div class="user-info">
             <span id="user-name"></span>
@@ -303,4 +282,5 @@
 
     <script src="estudiante.js"></script>
 </body>
+
 </html>

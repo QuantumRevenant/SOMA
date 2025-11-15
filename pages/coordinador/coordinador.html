@@ -9,18 +9,22 @@
 </head>
 
 <body>
-    <script src="../../auth.js"></script>
+   <script src="../../auth.js"></script>
     <script>
         const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
+
         if (!t.logged) location.href = "../../index.html";
-        if (t.role !== "coordinador") location.href = "../../index.html";
+
+        const REQUIRED_ROLE = "coordinador";
+        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
     </script>
 
     <div class="header">
         <!-- Usar auth.getHomeByRole(t.role) para ir al "home" del rol actual -->
-        <div class="logo" style="cursor:pointer" onclick="location.href = auth.getHomeByRole(t.role)">
-            SOMA
-        </div>
+        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
+    SOMA
+</div>
+
 
         <div class="user-info">
             <span>Coordinador Demo</span>
