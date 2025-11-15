@@ -1,6 +1,38 @@
-/* auth.js – versión portable sin BASE ni rutas absolutas */
+/* auth.js – versión portable con detección automática de base */
 (function () {
   const STORAGE_KEY = "mysite_auth";
+
+  // ⭐ DETECCIÓN AUTOMÁTICA: Calcula la base desde la ubicación del index.html
+  function getBasePath() {
+    const path = window.location.pathname;
+    
+    // Si estamos EN index.html o en la raíz
+    if (path.endsWith('/') || path.endsWith('/index.html')) {
+      // Extraer todo hasta el último /
+      const base = path.replace(/index\.html$/, '');
+      return base || '/';
+    }
+    
+    // Si estamos en una subpágina (ej: /pages/estudiante/estudiante.html)
+    // Buscamos hasta dónde está el directorio raíz
+    // Asumimos que index.html está 2 niveles arriba de las subpáginas
+    const segments = path.split('/').filter(s => s);
+    
+    // Si tenemos "pages" en la ruta, todo antes de "pages" es la base
+    const pagesIndex = segments.indexOf('pages');
+    if (pagesIndex > 0) {
+      return '/' + segments.slice(0, pagesIndex).join('/') + '/';
+    }
+    
+    // Fallback: si hostname contiene github.io, tomar el primer segmento
+    if (window.location.hostname.includes('github.io')) {
+      return segments.length > 0 ? `/${segments[0]}/` : '/';
+    }
+    
+    return '/';
+  }
+
+  const BASE_PATH = getBasePath();
 
   function readToken() {
     try {
@@ -37,26 +69,25 @@
   // --- rutas portables ---
   function getHomeByRole(role) {
     const routes = {
-      estudiante: "pages/estudiante/estudiante.html",
-      docente: "pages/docente/docente.html",
-      psicologo: "pages/psicologo/psicologo.html",
-      coordinador: "pages/coordinador/coordinador.html",
-      admin: "pages/admin/admin.html"
+      estudiante: `${BASE_PATH}pages/estudiante/estudiante.html`,
+      docente: `${BASE_PATH}pages/docente/docente.html`,
+      psicologo: `${BASE_PATH}pages/psicologo/psicologo.html`,
+      coordinador: `${BASE_PATH}pages/coordinador/coordinador.html`,
+      admin: `${BASE_PATH}pages/admin/admin.html`
     };
-    return routes[role] || "index.html";
+    return routes[role] || `${BASE_PATH}index.html`;
   }
 
-  // ⭐ NUEVA: Ruta relativa desde subpágina hacia index
+  // Ruta relativa desde subpágina hacia index
   function getIndexPath() {
     return "../../index.html";
   }
 
-  // ⭐ NUEVA: Ruta relativa desde subpágina hacia su home
+  // Ruta relativa desde subpágina hacia su home
   function getMyHome() {
     const t = readToken();
     if (!t || !t.logged || !t.role) return "../../index.html";
     
-    // Mapeo directo: si estoy en docente.html, devuelvo "docente.html"
     const homeFiles = {
       estudiante: "estudiante.html",
       docente: "docente.html",
@@ -93,7 +124,8 @@
     getIndexPath,
     getMyHome,
     protectPage,
-    logout
+    logout,
+    BASE_PATH  // ⭐ Exponer para debugging
   };
 
   // Exponer directo
@@ -135,6 +167,8 @@
     loginForm.addEventListener("submit", (ev) => {
       ev.preventDefault();
       writeToken({ logged: true, role: selectedRole, time: Date.now() });
+      
+      // ⭐ Usar ruta absoluta con BASE_PATH
       window.location.href = getHomeByRole(selectedRole);
     });
   });
