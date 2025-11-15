@@ -1,32 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOMA - Plataforma Educativa</title>
+    <title>SOMA - Portal Psicólogo</title>
     <link href="psicologo.css" rel="stylesheet">
 </head>
-
 <body>
-    <!-- Autenticación -->
+    <!-- ⭐ Primero cargamos auth.js -->
     <script src="../../auth.js"></script>
+    
+    <!-- ⭐ Después protegemos la página -->
     <script>
-        const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
-
-        if (!t.logged) location.href = "../../index.html";
-
-        const REQUIRED_ROLE = "psicologo";
-        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
+        auth.protectPage("psicologo");
     </script>
 
     <div class="header">
-        <!-- Logo que redirige al home del rol actual -->
-        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
-    SOMA
-</div>
-
-
+        <!-- ⭐ Logo usa auth.getMyHome() -->
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
         <div class="user-info">
             <span>Psicólogo Demo</span>
             <div class="user-avatar">PS</div>
@@ -35,9 +28,8 @@
     </div>
 
     <div class="container">
-
         <div class="subtitle">PORTAL PSICÓLOGO</div>
-
+        
         <div class="content">
             <!-- Panel derecho -->
             <div class="right">
@@ -49,10 +41,10 @@
                         <label>Datos Personales</label>
                     </div>
                 </div>
-
+                
                 <div class="items">
                     <ul>
-                        <li class="active" onclick="location.href='asistencia.html'">Casos Registrados</li>
+                        <li class="active" onclick="location.href='casos.html'">Casos Registrados</li>
                         <li onclick="location.href='observaciones.html'">Observaciones</li>
                     </ul>
                 </div>
@@ -66,7 +58,5 @@
     </div>
 
     <script src="psicologo.js"></script>
-
 </body>
-
 </html>

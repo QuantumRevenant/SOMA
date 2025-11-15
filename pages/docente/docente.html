@@ -1,111 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOMA - Plataforma Educativa</title>
-    <link href="docente.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOMA - Portal Docente</title>
+  <link href="docente.css" rel="stylesheet">
 </head>
-
 <body>
-    <script src="../../auth.js"></script>
-    <script>
-        const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
+  <!-- ⭐ Primero cargamos auth.js -->
+  <script src="../../auth.js"></script>
+  
+  <!-- ⭐ Después protegemos la página -->
+  <script>
+    // Proteger página con el rol correcto
+    auth.protectPage("docente");
+  </script>
 
-        if (!t.logged) location.href = "../../index.html";
+  <div class="header">
+    <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
+    <div class="logo" onclick="location.href = auth.getMyHome()">
+      SOMA
+    </div>
+    <div class="user-info">
+      <span id="user-name"></span>
+      <div class="user-avatar" id="user-avatar"></div>
+      <button class="logout-btn" onclick="auth.logout()">Salir</button>
+    </div>
+  </div>
 
-        const REQUIRED_ROLE = "docente";
-        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
-    </script>
-
-    <div class="header">
-        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
-    SOMA
-</div>
-
-
-        <div class="user-info">
-            <span id="user-name"></span>
-            <div class="user-avatar" id="user-avatar"></div>
-            <button class="logout-btn" onclick="auth.logout()">Salir</button>
-        </div>
+  <div class="container">
+    <div class="subtitle">
+      PORTAL DOCENTE
     </div>
 
-    <div class="container">
-        <div class="subtitle">
-            PORTAL DOCENTE
+    <div class="content">
+      <div class="right">
+        <div class="info-card">
+          <div class="info-photo"></div>
+          <div class="info-text">
+            <label>Juan Perez Quiñonez</label>
+            <label>d14001</label>
+            <label>Datos Personales</label>
+          </div>
         </div>
 
-        <div class="content">
-            <div class="right">
-                <div class="info-card">
-                    <div class="info-photo"></div>
-
-                    <div class="info-text">
-                        <label>Juan Perez Quiñonez</label>
-                        <label>d14001</label>
-                        <label>Datos Personales</label>
-                    </div>
-                </div>
-
-                <div class="items">
-                    <ul>
-                        <li class="active">Mis Programaciones</li>
-                        <li>Asistencia</li>
-                        <li>Notas</li>
-                        <li>Observaciones</li>
-                        <li>Talleres</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="left">
-                <div class="banner"></div>
-
-                <div class="header-content">
-                    <h3>MIS CLASES DE HOY</h3>
-                </div>
-
-                <div class="table-wrap">
-                    <table class="table">
-                        <thead class="header-table">
-                            <th>Hora Inicio</th>
-                            <th>Hora Fin</th>
-                            <th>Curso Sección</th>
-                            <th>Tipo</th>
-                            <th>Aula</th>
-                        </thead>
-                        <tbody class="body-table">
-                            <tr>
-                                <td>08:00</td>
-                                <td>15:30</td>
-                                <td>C845</td>
-                                <td>Remoto/Presencial</td>
-                                <td>Pabellon 2</td>
-                            </tr>
-                            <tr>
-                                <td>08:00</td>
-                                <td>15:30</td>
-                                <td>C845</td>
-                                <td>Remoto/Presencial</td>
-                                <td>Pabellon 2</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="header-content">
-                    <h3>PREG - MATEMATICA II</h3>
-                </div>
-
-                <label>Sección: 1848 </label>
-            </div>
+        <div class="items">
+          <ul>
+            <li class="active">Mis Programaciones</li>
+            <li>Asistencia</li>
+            <li>Notas</li>
+            <li>Observaciones</li>
+            <li>Talleres</li>
+          </ul>
         </div>
+      </div>
+
+      <div class="left">
+        <div class="banner"></div>
+        
+        <div class="header-content">
+          <h3>MIS CLASES DE HOY</h3>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead class="header-table">
+              <th>Hora Inicio</th>
+              <th>Hora Fin</th>
+              <th>Curso Sección</th>
+              <th>Tipo</th>
+              <th>Aula</th>
+            </thead>
+            <tbody class="body-table">
+              <tr>
+                <td>08:00</td>
+                <td>15:30</td>
+                <td>C845</td>
+                <td>Remoto/Presencial</td>
+                <td>Pabellon 2</td>
+              </tr>
+              <tr>
+                <td>08:00</td>
+                <td>15:30</td>
+                <td>C845</td>
+                <td>Remoto/Presencial</td>
+                <td>Pabellon 2</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="header-content">
+          <h3>PREG - MATEMATICA II</h3>
+        </div>
+        <label>Sección: 1848</label>
+      </div>
     </div>
+  </div>
 
-    <script src="docente.js"></script>
-
+  <script src="docente.js"></script>
 </body>
-
 </html>

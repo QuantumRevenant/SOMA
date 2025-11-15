@@ -4,25 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOMA - Plataforma Educativa</title>
+    <title>SOMA - Portal Estudiante</title>
     <link href="estudiante.css" rel="stylesheet">
 </head>
 
 <body>
+    <!-- ⭐ Primero cargamos auth.js -->
     <script src="../../auth.js"></script>
+    
+    <!-- ⭐ Después protegemos la página -->
     <script>
-        const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
-
-        if (!t.logged) location.href = "../../index.html";
-
-        const REQUIRED_ROLE = "estudiante";
-        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
+        auth.protectPage("estudiante");
     </script>
 
+    <!-- ⭐ Header único y correcto -->
     <div class="header">
-        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
-    SOMA
-</div>
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
 
         <div class="user-info">
             <span id="user-name"></span>
@@ -30,7 +29,6 @@
             <button class="logout-btn" onclick="auth.logout()">Salir</button>
         </div>
     </div>
-
 
     <div class="container">
         <div class="welcome-banner">

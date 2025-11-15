@@ -14,13 +14,19 @@
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(t));
     } catch {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(t)); } catch { }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(t));
+      } catch {}
     }
   }
 
   function removeToken() {
-    try { sessionStorage.removeItem(STORAGE_KEY); } catch { }
-    try { localStorage.removeItem(STORAGE_KEY); } catch { }
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
   }
 
   function isLogged() {
@@ -37,38 +43,60 @@
       coordinador: "pages/coordinador/coordinador.html",
       admin: "pages/admin/admin.html"
     };
-
     return routes[role] || "index.html";
+  }
+
+  // ⭐ NUEVA: Ruta relativa desde subpágina hacia index
+  function getIndexPath() {
+    return "../../index.html";
+  }
+
+  // ⭐ NUEVA: Ruta relativa desde subpágina hacia su home
+  function getMyHome() {
+    const t = readToken();
+    if (!t || !t.logged || !t.role) return "../../index.html";
+    
+    // Mapeo directo: si estoy en docente.html, devuelvo "docente.html"
+    const homeFiles = {
+      estudiante: "estudiante.html",
+      docente: "docente.html",
+      psicologo: "psicologo.html",
+      coordinador: "coordinador.html",
+      admin: "admin.html"
+    };
+    return homeFiles[t.role] || "../../index.html";
   }
 
   function protectPage(requiredRole) {
     const t = readToken() || {};
-
     if (!t.logged) {
-      window.location.href = "../../index.html"; 
+      window.location.href = getIndexPath();
       return;
     }
-
     if (requiredRole && t.role !== requiredRole) {
-      window.location.href = "../../index.html";
+      window.location.href = getIndexPath();
     }
   }
 
   function logout() {
     removeToken();
-    window.location.href = "../../index.html";
+    window.location.href = getIndexPath();
   }
 
+  // Exponer en window.auth
   window.auth = {
     readToken,
     writeToken,
     removeToken,
     isLogged,
     getHomeByRole,
+    getIndexPath,
+    getMyHome,
     protectPage,
     logout
   };
 
+  // Exponer directo
   window.getHomeByRole = getHomeByRole;
   window.logout = logout;
 
@@ -92,7 +120,7 @@
           a.classList.add("active");
         });
       });
-    } catch { }
+    } catch {}
 
     // Social login pendiente
     try {
@@ -102,19 +130,12 @@
           alert("Funcionalidad pendiente de implementación");
         });
       });
-    } catch { }
+    } catch {}
 
     loginForm.addEventListener("submit", (ev) => {
       ev.preventDefault();
-
-      writeToken({
-        logged: true,
-        role: selectedRole,
-        time: Date.now()
-      });
-
+      writeToken({ logged: true, role: selectedRole, time: Date.now() });
       window.location.href = getHomeByRole(selectedRole);
     });
   });
-
 })();

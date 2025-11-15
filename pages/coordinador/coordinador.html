@@ -1,55 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOMA - Plataforma Educativa</title>
+    <title>SOMA - Portal Coordinador</title>
     <link href="coordinador.css" rel="stylesheet">
 </head>
-
 <body>
-   <script src="../../auth.js"></script>
+    <!-- ⭐ Primero cargamos auth.js -->
+    <script src="../../auth.js"></script>
+    
+    <!-- ⭐ Después protegemos la página -->
     <script>
-        const t = JSON.parse(sessionStorage.getItem("mysite_auth") || "{}");
-
-        if (!t.logged) location.href = "../../index.html";
-
-        const REQUIRED_ROLE = "coordinador";
-        if (t.role !== REQUIRED_ROLE) location.href = "../../index.html";
+        auth.protectPage("coordinador");
     </script>
 
     <div class="header">
-        <!-- Usar auth.getHomeByRole(t.role) para ir al "home" del rol actual -->
-        <div class="logo" onclick="location.href = auth.getHomeByRole(t.role)">
-    SOMA
-</div>
-
-
+        <!-- ⭐ Logo usa auth.getMyHome() -->
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
         <div class="user-info">
             <span>Coordinador Demo</span>
             <div class="user-avatar">CD</div>
-            <!-- Si quieres mantener el botón, usa auth.logout() expuesto por auth.js -->
             <button class="logout-btn" onclick="auth.logout()">Salir</button>
         </div>
     </div>
 
-
     <div class="container">
         <div class="subtitle">PORTAL COORDINADOR</div>
-
+        
         <div class="content">
             <div class="right">
                 <div class="info-card">
                     <div class="info-photo"></div>
-
                     <div class="info-text">
                         <label>Juan Perez Quiñonez</label>
-                        <label>d14001</label>
+                        <label>c14001</label>
                         <label>Datos Personales</label>
                     </div>
                 </div>
-
+                
                 <div class="items">
                     <ul>
                         <li class="active" onclick="location.href='asistencia.html'">Asistencia de Docentes</li>
@@ -64,15 +55,6 @@
         </div>
     </div>
 
-    <script>
-        function logout() {
-            sessionStorage.removeItem("mysite_auth");
-            location.href = "../../index.html";
-        }
-    </script>
-
     <script src="coordinador.js"></script>
 </body>
-
-
 </html>
