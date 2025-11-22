@@ -29,7 +29,7 @@
 
     <div class="container">
         <div class="subtitle">PORTAL PSICÓLOGO</div>
-        
+
         <div class="content">
             <!-- Panel derecho -->
             <div class="right">
@@ -37,22 +37,211 @@
                     <div class="info-photo"></div>
                     <div class="info-text">
                         <label>Juan Perez Quiñonez</label>
-                        <label>p14001</label>
+                        <label>d14001</label>
                         <label>Datos Personales</label>
                     </div>
                 </div>
-                
+
                 <div class="items">
                     <ul>
-                        <li class="active" onclick="location.href='casos.html'">Casos Registrados</li>
-                        <li onclick="location.href='observaciones.html'">Observaciones</li>
+                        <li class="active" data-tab="evaluaciones">Evaluaciones</li>
+                        <li data-tab="sesiones">Sesiones</li>
+                        <li data-tab="disponibilidad">Disponibilidad</li>
+                        <li data-tab="citas">Citas Agendadas</li>
                     </ul>
                 </div>
             </div>
 
             <!-- Panel izquierdo -->
             <div class="left">
-                <div class="banner"></div>
+
+                <div class="banner">
+                </div>
+
+
+                <div class="tab-content show" data-content="evaluaciones">
+                    <div class="header-content">
+                        <h3>Evaluaciones Psicologicas</h3>
+                    </div>
+
+                    <div class="filters">
+                        <div class="input-icon">
+                            <input type="text" class="input-search" placeholder="Nombre del estudiante">
+                            <span class="icon-search"></span>
+                        </div>
+
+                        <input type="date" placeholder="Fecha de cita">
+
+                        <select>
+                            <option value="" selected>Seleccione</option>
+                            <option value="1">Alto</option>
+                            <option value="2">Medio</option>
+                            <option value="3">Bajo</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Estudiantes</th>
+                                <th>Código</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>28/10/2025</td>
+                                    <td>15:05</td>
+                                    <td>tipo</td>
+                                    <td>estudiantes</td>
+                                    <td>U11111111</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>28/10/2025</td>
+                                    <td>15:05</td>
+                                    <td>tipo</td>
+                                    <td>estudiantes</td>
+                                    <td>U11111111</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="sesiones">
+                    <div class="header-content">
+                        <h3>Sesiones</h3>
+                    </div>
+
+                    <div class="filters">
+                        <div class="input-icon">
+                            <input type="text" class="input-search" placeholder="Nombre del estudiante">
+                            <span class="icon-search"></span>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Estudiante</th>
+                                <th>Fecha de Sesión</th>
+                                <th>Estado</th>
+                                <th>Observaciones</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>Pablo Sanchez</td>
+                                    <td>28/04/2024</td>
+                                    <td>Realizada</td>
+                                    <td>Depresión</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>Ana Gonzales</td>
+                                    <td>18/10/2024</td>
+                                    <td>Reprogramada</td>
+                                    <td>Paciente no asitio</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="disponibilidad">
+                    <div class="header-content">
+                        <h3>Disponibilidad</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Horas</th>
+                                <th>Lunes</th>
+                                <th>Martes</th>
+                                <th>Miércoles</th>
+                                <th>Jueves</th>
+                                <th>Viernes</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>9:00 - 10:00</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M20 6L9 17L4 12" stroke="#26C281" stroke-width="3"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </td>
+                                </tr>
+                                <tr class="center">
+                                    <td>10:00 - 11:00</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr class="center">
+                                    <td>11:00 - 12:00</td>
+                                    <td></td>
+                                    <td>
+                                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M20 6L9 17L4 12" stroke="#26C281" stroke-width="3"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="citas">
+                    <div class="header-content">
+                        <h3>Citas</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Estudiantes</th>
+                                <th>Código</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>28/10/2025</td>
+                                    <td>15:05</td>
+                                    <td>tipo</td>
+                                    <td>estudiantes</td>
+                                    <td>U11111111</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>28/10/2025</td>
+                                    <td>15:05</td>
+                                    <td>tipo</td>
+                                    <td>estudiantes</td>
+                                    <td>U11111111</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
