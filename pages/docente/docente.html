@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOMA - Portal Docente</title>
     <link href="docente.css" rel="stylesheet">
+    <link href="../docente/modals/asistencia/asistencia.css" rel="stylesheet">
 </head>
+
 <body>
-  <!-- ⭐ Primero cargamos auth.js -->
-  <script src="../../auth.js"></script>
-  
-  <!-- ⭐ Después protegemos la página -->
-  <script>
-    // Proteger página con el rol correcto
-    auth.protectPage("docente");
-  </script>
+    <!-- ⭐ Primero cargamos auth.js -->
+    <script src="../../auth.js"></script>
+
+    <!-- ⭐ Después protegemos la página -->
+    <script>
+        // Proteger página con el rol correcto
+        auth.protectPage("docente");
+    </script>
 
     <div class="header">
-    <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
-    <div class="logo" onclick="location.href = auth.getMyHome()">
-      SOMA
-    </div>
-    <div class="user-info">
-      <span id="user-name"></span>
-      <div class="user-avatar" id="user-avatar"></div>
-      <button class="logout-btn" onclick="auth.logout()">Salir</button>
-    </div>
+        <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <div class="user-avatar" id="user-avatar"></div>
+            <button class="logout-btn" onclick="auth.logout()">Salir</button>
+        </div>
     </div>
 
     <div class="container">
@@ -137,10 +140,119 @@
                     </div>
                 </div>
 
+                <div class="tab-content" data-content="asistencia">
+                    <div class="header-content">
+                        <h3>ASISTENCIAS</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="body-content">
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">CS101 - 2025-1</div>
+                                <div class="course-title">Desarrollo de Software</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">HUM105 - 2025-1</div>
+                                <div class="course-title">Redacción Academica</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">MAT201 - 2025-1</div>
+                                <div class="course-title">Matemáticas Avanzadas</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+
+            <h3>Asistencias</h3>
+            
+            <br>
+
+            <div class="table-wrap-popup">
+                <table class="table">
+                    <thead class="header-table">
+                        <th>Fecha</th>
+                        <th>Alumno</th>
+                        <th>Asistencia</th>
+                    </thead>
+                    <tbody class="body-table">
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="popup-buttons">
+                <button class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../docente/modals/asistencia/asistencia.js"></script>
     <script src="docente.js"></script>
 </body>
+
 </html>
