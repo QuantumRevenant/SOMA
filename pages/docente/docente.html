@@ -46,11 +46,11 @@
 
                 <div class="items">
                     <ul>
-                        <li class="active">Mis Programaciones</li>
-                        <li>Asistencia</li>
-                        <li>Notas</li>
-                        <li>Observaciones</li>
-                        <li>Talleres</li>
+                        <li class="active" data-tab="programaciones">Mis Programaciones</li>
+                        <li data-tab="asistencia">Asistencia</li>
+                        <li data-tab="notas">Notas</li>
+                        <li data-tab="observaciones">Observaciones</li>
+                        <li data-tab="talleres">Talleres</li>
                     </ul>
                 </div>
             </div>
@@ -58,7 +58,7 @@
             <div class="left">
                 <div class="banner"></div>
 
-                <div class="header-content">
+                <!-- <div class="header-content">
                     <h3>MIS CLASES DE HOY</h3>
                 </div>
 
@@ -93,7 +93,50 @@
                 <div class="header-content">
                     <h3>PREG - MATEMATICA II</h3>
                 </div>
-                <label>Sección: 1848</label>
+                <label>Sección: 1848</label> -->
+                <div class="tab-content show" data-content="programaciones">
+                    <div class="header-content">
+                        <h3>MIS PROGRAMACIONES</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Fecha</th>
+                                <th>Hora Inicio</th>
+                                <th>Hora Fin</th>
+                                <th>Curso</th>
+                                <th>Aula</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>8:00</td>
+                                    <td>10:00</td>
+                                    <td>Mat.II</td>
+                                    <td>A-203</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>12:00</td>
+                                    <td>14:00</td>
+                                    <td>Program.</td>
+                                    <td>C-107</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>9:00</td>
+                                    <td>11:00</td>
+                                    <td>Física.II</td>
+                                    <td>Lab 4</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

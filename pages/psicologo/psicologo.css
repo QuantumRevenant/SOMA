@@ -245,7 +245,7 @@ select {
 input[type="text"]:focus,
 input[type="date"]:focus,
 select:focus {
-    border-color: #1a73e8;
+    border-color: #ff6b6b;
     outline: none;
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.25);
 }
