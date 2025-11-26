@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOMA - Portal Estudiante</title>
     <link href="estudiante.css" rel="stylesheet">
+    <link href="../estudiante/modals/acceder-recursos/acceder-recursos.css" rel="stylesheet">
 </head>
 
 <body>
     <!-- ⭐ Primero cargamos auth.js -->
     <script src="../../auth.js"></script>
-    
+
     <!-- ⭐ Después protegemos la página -->
     <script>
         auth.protectPage("estudiante");
@@ -88,8 +89,8 @@
                             </div>
                         </div>
                         <div class="course-actions">
-                            <button class="btn btn-primary">Acceder</button>
-                            <button class="btn btn-secondary">Recursos</button>
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
                         </div>
                     </div>
                 </div>
@@ -117,8 +118,8 @@
                             </div>
                         </div>
                         <div class="course-actions">
-                            <button class="btn btn-primary">Acceder</button>
-                            <button class="btn btn-secondary">Recursos</button>
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
                         </div>
                     </div>
                 </div>
@@ -146,8 +147,8 @@
                             </div>
                         </div>
                         <div class="course-actions">
-                            <button class="btn btn-primary">Acceder</button>
-                            <button class="btn btn-secondary">Recursos</button>
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
                         </div>
                     </div>
                 </div>
@@ -175,8 +176,8 @@
                             </div>
                         </div>
                         <div class="course-actions">
-                            <button class="btn btn-primary">Acceder</button>
-                            <button class="btn btn-secondary">Recursos</button>
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
                         </div>
                     </div>
                 </div>
@@ -278,6 +279,89 @@
 
     </div>
 
+    <div class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+            <div class="card-popup">
+                <h3 class="title-popup">Desarrollo de Software</h3>
+                <br>
+                <div class="tabs-popup">
+                    <button class="tab-popup active" onclick="openTab(0)">Acceder</button>
+                    <button class="tab-popup" onclick="openTab(1)">Recursos</button>
+                </div>
+
+                <div class="content-popup active">
+                    <h3>Notas</h3>
+
+                    <table class="notas">
+                        <tr>
+                            <th>Evaluación</th>
+                            <th></th>
+                            <th>Nota</th>
+                        </tr>
+                        <tr>
+                            <td>TA Tarea Académica</td>
+                            <td>10%</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>PC1 Práctica Calificada 1</td>
+                            <td>10%</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>EXPA Examen Parcial</td>
+                            <td>25%</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>PC2 Práctica Calificada 2</td>
+                            <td>15%</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>PA Participación en Clase</td>
+                            <td>10%</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>EXFN Examen Final</td>
+                            <td>30%</td>
+                            <td>—</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="content-popup">
+                    <h3>Material del Curso</h3>
+                    <ul>
+                        <li>Sílabo del curso (PDF)</li>
+                        <li>Presentaciones de clase</li>
+                        <li>Lecturas Complementarias</li>
+                    </ul>
+
+                    <h3>Archivos Descargables</h3>
+                    <ul>
+                        <li>Proyecto base (ZIP)</li>
+                        <li>Ejercicios prácticos</li>
+                        <li>Guías de Laboratorio</li>
+                    </ul>
+
+                    <h3>Multimedia</h3>
+                    <ul>
+                        <li>Video 1: Introducción al curso</li>
+                        <li>Video 2: Fundamentos de programación</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="popup-buttons">
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../estudiante/modals/acceder-recursos/acceder-recursos.js"></script>
     <script src="estudiante.js"></script>
 </body>
 
