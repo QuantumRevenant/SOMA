@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOMA - Portal Docente</title>
     <link href="docente.css" rel="stylesheet">
+    <link href="../docente/modals/asistencia/asistencia.css" rel="stylesheet">
 </head>
+
 <body>
-  <!-- ⭐ Primero cargamos auth.js -->
-  <script src="../../auth.js"></script>
-  
-  <!-- ⭐ Después protegemos la página -->
-  <script>
-    // Proteger página con el rol correcto
-    auth.protectPage("docente");
-  </script>
+    <!-- ⭐ Primero cargamos auth.js -->
+    <script src="../../auth.js"></script>
+
+    <!-- ⭐ Después protegemos la página -->
+    <script>
+        // Proteger página con el rol correcto
+        auth.protectPage("docente");
+    </script>
 
     <div class="header">
-    <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
-    <div class="logo" onclick="location.href = auth.getMyHome()">
-      SOMA
-    </div>
-    <div class="user-info">
-      <span id="user-name"></span>
-      <div class="user-avatar" id="user-avatar"></div>
-      <button class="logout-btn" onclick="auth.logout()">Salir</button>
-    </div>
+        <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <div class="user-avatar" id="user-avatar"></div>
+            <button class="logout-btn" onclick="auth.logout()">Salir</button>
+        </div>
     </div>
 
     <div class="container">
@@ -46,11 +49,11 @@
 
                 <div class="items">
                     <ul>
-                        <li class="active">Mis Programaciones</li>
-                        <li>Asistencia</li>
-                        <li>Notas</li>
-                        <li>Observaciones</li>
-                        <li>Talleres</li>
+                        <li class="active" data-tab="programaciones">Mis Programaciones</li>
+                        <li data-tab="asistencia">Asistencia</li>
+                        <li data-tab="notas">Notas</li>
+                        <li data-tab="observaciones">Observaciones</li>
+                        <li data-tab="talleres">Talleres</li>
                     </ul>
                 </div>
             </div>
@@ -58,7 +61,7 @@
             <div class="left">
                 <div class="banner"></div>
 
-                <div class="header-content">
+                <!-- <div class="header-content">
                     <h3>MIS CLASES DE HOY</h3>
                 </div>
 
@@ -93,11 +96,163 @@
                 <div class="header-content">
                     <h3>PREG - MATEMATICA II</h3>
                 </div>
-                <label>Sección: 1848</label>
+                <label>Sección: 1848</label> -->
+                <div class="tab-content show" data-content="programaciones">
+                    <div class="header-content">
+                        <h3>MIS PROGRAMACIONES</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Fecha</th>
+                                <th>Hora Inicio</th>
+                                <th>Hora Fin</th>
+                                <th>Curso</th>
+                                <th>Aula</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>8:00</td>
+                                    <td>10:00</td>
+                                    <td>Mat.II</td>
+                                    <td>A-203</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>12:00</td>
+                                    <td>14:00</td>
+                                    <td>Program.</td>
+                                    <td>C-107</td>
+                                </tr>
+                                <tr class="center">
+                                    <td>21/11/2025</td>
+                                    <td>9:00</td>
+                                    <td>11:00</td>
+                                    <td>Física.II</td>
+                                    <td>Lab 4</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="asistencia">
+                    <div class="header-content">
+                        <h3>ASISTENCIAS</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="body-content">
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">CS101 - 2025-1</div>
+                                <div class="course-title">Desarrollo de Software</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">HUM105 - 2025-1</div>
+                                <div class="course-title">Redacción Academica</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">MAT201 - 2025-1</div>
+                                <div class="course-title">Matemáticas Avanzadas</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+
+            <h3>Asistencias</h3>
+            
+            <br>
+
+            <div class="table-wrap-popup">
+                <table class="table">
+                    <thead class="header-table">
+                        <th>Fecha</th>
+                        <th>Alumno</th>
+                        <th>Asistencia</th>
+                    </thead>
+                    <tbody class="body-table">
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="popup-buttons">
+                <button class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../docente/modals/asistencia/asistencia.js"></script>
     <script src="docente.js"></script>
 </body>
+
 </html>

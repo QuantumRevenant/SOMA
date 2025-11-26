@@ -6,19 +6,18 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f0f4f8;
+    background: #FFF7E6
 }
 
 .header {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-    color: white;
+    background: #fff7e6;
+    color: #4b3f36;
     padding: 15px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
-
 .logo {
     font-size: 28px;
     font-weight: bold;
@@ -50,16 +49,17 @@ body {
 }
 
 .welcome-banner {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF6B6B 100%);
+    color: #4B3F36;
+    font-weight: bold;
     padding: 30px;
     border-radius: 12px;
     margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 15px rgba(235, 50, 37, 0.3);
 }
 
 .welcome-banner h1 {
-    color: white;
+    color: #523D53;
     margin-bottom: 10px;
     font-size: 32px;
 }
@@ -89,13 +89,13 @@ body {
 }
 
 .tab.active {
-    color: #2563eb;
-    border-bottom-color: #2563eb;
+    color:#000000;
+    border-bottom-color: #000000;
     font-weight: 600;
 }
 
 .tab:hover {
-    color: #2563eb;
+    color: #000000;
 }
 
 .courses-grid {
@@ -121,8 +121,8 @@ body {
 }
 
 .course-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff6b6b 100%);
+    color: #ffffff;
     padding: 20px;
     min-height: 120px;
 }
@@ -166,7 +166,7 @@ body {
 .stat-value {
     font-size: 20px;
     font-weight: bold;
-    color: #2563eb;
+    color: #000000;
 }
 
 .course-actions {
@@ -186,17 +186,17 @@ body {
 }
 
 .btn-primary {
-    background: #2563eb;
+    background: #FF6B6B;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #1e40af;
+    background: #d65b5b;
 }
 
 .btn-secondary {
     background: #f3f4f6;
-    color: #374151;
+    color: #000000;
 }
 
 .btn-secondary:hover {
@@ -213,7 +213,7 @@ body {
 
 .notification-item {
     padding: 15px;
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #ff6b6b;
     background: #eff6ff;
     margin-bottom: 10px;
     border-radius: 8px;
@@ -246,7 +246,7 @@ body {
 }
 
 .stat-card {
-    background: white;
+    background: #FF6B6B;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -254,7 +254,7 @@ body {
 }
 
 .stat-card h3 {
-    color: #64748b;
+    color: #000000;
     font-size: 14px;
     margin-bottom: 10px;
     font-weight: 500;
@@ -263,7 +263,7 @@ body {
 .stat-card .value {
     font-size: 28px;
     font-weight: bold;
-    color: #2563eb;
+    color: #523D53;
 }
 
 .logout-btn {
