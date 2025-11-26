@@ -18,6 +18,7 @@ body {
     align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
+
 .logo {
     font-size: 28px;
     font-weight: bold;
@@ -89,7 +90,7 @@ body {
 }
 
 .tab.active {
-    color:#000000;
+    color: #000000;
     border-bottom-color: #000000;
     font-weight: 600;
 }
@@ -275,6 +276,11 @@ body {
     cursor: pointer;
     margin-left: 10px;
 }
+
 .logout-btn:hover {
     background: #c0392b;
 }
+
+/*************************************/
+
+
