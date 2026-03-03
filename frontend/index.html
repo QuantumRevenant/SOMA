@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOMA - Plataforma Educativa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <h2>SOMA WEB</h2>
+      <h3>Sistema de Orientación y Monitoreo Académico-emocional</h3>
+
+      <form id="loginForm">
+        <label>Usuario</label>
+        <input type="text" id="username" name="username" placeholder="Usuario" required>
+
+        <label>Password</label>
+        <input type="password" id="password" name="password" placeholder="********" required>
+
+        <div class="options">
+          <label><input type="checkbox"> Remember Me</label>
+          <a href="#">Restablecer contraseña</a>
+        </div>
+
+        <div class="buttons">
+          <button type="submit" class="login">Iniciar Sesión</button>
+          <button type="button" class="signup">Registrarse</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="right">
+      <img src="https://www.apega.org/wp-content/uploads/2020/10/educacion-emocional.jpg"
+           alt="Educación Emocional"
+           class="img-emocional">
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>

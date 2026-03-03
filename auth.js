@@ -5,30 +5,30 @@
   // ⭐ DETECCIÓN AUTOMÁTICA: Calcula la base desde la ubicación del index.html
   function getBasePath() {
     const path = window.location.pathname;
-
+    
     // Si estamos EN index.html o en la raíz
     if (path.endsWith('/') || path.endsWith('/index.html')) {
       // Extraer todo hasta el último /
       const base = path.replace(/index\.html$/, '');
       return base || '/';
     }
-
+    
     // Si estamos en una subpágina (ej: /pages/estudiante/estudiante.html)
     // Buscamos hasta dónde está el directorio raíz
     // Asumimos que index.html está 2 niveles arriba de las subpáginas
     const segments = path.split('/').filter(s => s);
-
+    
     // Si tenemos "pages" en la ruta, todo antes de "pages" es la base
     const pagesIndex = segments.indexOf('pages');
     if (pagesIndex > 0) {
       return '/' + segments.slice(0, pagesIndex).join('/') + '/';
     }
-
+    
     // Fallback: si hostname contiene github.io, tomar el primer segmento
     if (window.location.hostname.includes('github.io')) {
       return segments.length > 0 ? `/${segments[0]}/` : '/';
     }
-
+    
     return '/';
   }
 
@@ -48,17 +48,17 @@
     } catch {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(t));
-      } catch { }
+      } catch {}
     }
   }
 
   function removeToken() {
     try {
       sessionStorage.removeItem(STORAGE_KEY);
-    } catch { }
+    } catch {}
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch { }
+    } catch {}
   }
 
   function isLogged() {
@@ -87,7 +87,7 @@
   function getMyHome() {
     const t = readToken();
     if (!t || !t.logged || !t.role) return "../../index.html";
-
+    
     const homeFiles = {
       estudiante: "estudiante.html",
       docente: "docente.html",
@@ -152,31 +152,22 @@
           a.classList.add("active");
         });
       });
-    } catch { }
+    } catch {}
 
     // Social login pendiente
     try {
-      document.querySelectorAll(".social-links a").forEach(a => {
-        a.addEventListener("click", (e) => {
+      document.querySelectorAll(".social-links a").forEach(s => {
+        s.addEventListener("click", (e) => {
           e.preventDefault();
-
-          const w = 500, h = 600;
-          const left = (screen.width - w) / 2;
-          const top = (screen.height - h) / 2;
-
-          window.open(
-            a.dataset.url,
-            "login",
-            `width=${w},height=${h},left=${left},top=${top}`
-          );
+          alert("Funcionalidad pendiente de implementación");
         });
       });
-    } catch { }
+    } catch {}
 
     loginForm.addEventListener("submit", (ev) => {
       ev.preventDefault();
       writeToken({ logged: true, role: selectedRole, time: Date.now() });
-
+      
       // ⭐ Usar ruta absoluta con BASE_PATH
       window.location.href = getHomeByRole(selectedRole);
     });

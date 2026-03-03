@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOMA - Portal Estudiante</title>
+    <link href="estudiante.css" rel="stylesheet">
+    <link href="../estudiante/modals/acceder-recursos/acceder-recursos.css" rel="stylesheet">
+    <link href="../estudiante/modals/citas-asesorias/citas-asesorias.css" rel="stylesheet">
+    <link href="../../utils/notificacion/notificacion.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../utils/atencion/atencion.css">
+</head>
+
+<body>
+    <!-- ⭐ Primero cargamos auth.js -->
+    <script src="../../auth.js"></script>
+
+    <!-- ⭐ Después protegemos la página -->
+    <script>
+        auth.protectPage("estudiante");
+    </script>
+
+    <!-- ⭐ Header único y correcto -->
+    <div class="header">
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
+
+
+
+
+        <!-- Contenedor derecho: botón + info de usuario -->
+        <div class="header-right" style="display: flex; align-items: center; gap: 1rem;">
+            <button class="logout-btn popup-cita-click">
+                Citas y Asesorías
+            </button>
+
+            <div class="user-info">
+                <span>Estudiante Demo</span>
+                <div class="user-avatar">PS</div>
+                <button class="logout-btn" onclick="logout()">Salir</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="welcome-banner banner-estudiante">
+            <h1>PORTAL ESTUDIANTE</h1>
+        </div>
+
+        <div class="welcome-banner">
+            <h1>¡Bienvenido a SOMA!</h1>
+            <p>Tu espacio personalizado de aprendizaje - Todos tus cursos y actividades en un solo lugar</p>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <h3>Cursos Activos</h3>
+                <div class="value">4</div>
+            </div>
+            <div class="stat-card">
+                <h3>Tareas Pendientes</h3>
+                <div class="value">6</div>
+            </div>
+            <div class="stat-card">
+                <h3>Promedio General</h3>
+                <div class="value">15.8</div>
+            </div>
+            <div class="stat-card">
+                <h3>Próximas Entregas</h3>
+                <div class="value">3</div>
+            </div>
+        </div>
+
+        <!-- <div class="tabs">
+            <button class="tab active" onclick="showTab('courses')">Mis Cursos</button>
+            <button class="tab" onclick="showTab('calendar')">Calendario</button>
+            <button class="tab" onclick="showTab('grades')">Calificaciones</button>
+            <button class="tab" onclick="showTab('notifications')">Notificaciones</button>
+        </div> -->
+
+        <div id="courses" class="content-section active">
+            <div class="courses-grid">
+                <div class="course-card">
+                    <div class="course-header">
+                        <div class="course-code">CS101 - 2025-1</div>
+                        <div class="course-title">Desarrollo de Software</div>
+                        <div class="course-professor">Prof. Laura Martínez</div>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">3</div>
+                                <div>Tareas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">85%</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">16.5</div>
+                                <div>Promedio</div>
+                            </div>
+                        </div>
+                        <div class="course-actions">
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card">
+                    <div class="course-header">
+                        <div class="course-code">MAT201 - 2025-1</div>
+                        <div class="course-title">Matemáticas Avanzadas</div>
+                        <div class="course-professor">Prof. Roberto Silva</div>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">2</div>
+                                <div>Tareas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">70%</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">15.0</div>
+                                <div>Promedio</div>
+                            </div>
+                        </div>
+                        <div class="course-actions">
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card">
+                    <div class="course-header">
+                        <div class="course-code">BIO102 - 2025-1</div>
+                        <div class="course-title">Biología Molecular</div>
+                        <div class="course-professor">Prof. Carmen Vega</div>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">1</div>
+                                <div>Tareas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">60%</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">14.2</div>
+                                <div>Promedio</div>
+                            </div>
+                        </div>
+                        <div class="course-actions">
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card">
+                    <div class="course-header">
+                        <div class="course-code">HUM105 - 2025-1</div>
+                        <div class="course-title">Redacción Académica</div>
+                        <div class="course-professor">Prof. Miguel Ángel Rojas</div>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">4</div>
+                                <div>Tareas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">90%</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">17.3</div>
+                                <div>Promedio</div>
+                            </div>
+                        </div>
+                        <div class="course-actions">
+                            <button class="btn btn-primary open-popup">Acceder</button>
+                            <button class="btn btn-secondary open-popup">Recursos</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="calendar" class="content-section">
+            <div class="notifications">
+                <h2 style="margin-bottom: 20px; color: #1e293b;">Próximas Actividades</h2>
+
+                <div class="notification-item">
+                    <div class="notification-title">Evaluación Final - Desarrollo de Software</div>
+                    <p>Fecha: 15 de Octubre, 2025 - 10:00 AM</p>
+                    <div class="notification-date">Quedan 3 días</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Proyecto Grupal - Matemáticas Avanzadas</div>
+                    <p>Fecha: 13 de Octubre, 2025 - 11:59 PM</p>
+                    <div class="notification-date">Quedan 1 día</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Laboratorio Virtual - Biología Molecular</div>
+                    <p>Fecha: 12 de Octubre, 2025 - 3:00 PM</p>
+                    <div class="notification-date">Hoy</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Ensayo Final - Redacción Académica</div>
+                    <p>Fecha: 18 de Octubre, 2025 - 11:59 PM</p>
+                    <div class="notification-date">Quedan 6 días</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="grades" class="content-section">
+            <div class="notifications">
+                <h2 style="margin-bottom: 20px; color: #1e293b;">Mis Calificaciones</h2>
+
+                <div class="notification-item">
+                    <div class="notification-title">Desarrollo de Software - Promedio: 16.5</div>
+                    <p>Examen 1: 17 | Examen 2: 16 | Examen 3: Pendiente | Proyectos: 17</p>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Matemáticas Avanzadas - Promedio: 15.0</div>
+                    <p>Examen 1: 14 | Examen 2: 16 | Examen 3: Pendiente | Tareas: 15</p>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Biología Molecular - Promedio: 14.2</div>
+                    <p>Examen 1: 15 | Examen 2: 13.5 | Labs: 14 | Examen 3: Pendiente</p>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Redacción Académica - Promedio: 17.3</div>
+                    <p>Examen 1: 18 | Ensayo 2: 17 | Ensayo 3: 17 | Participación: 18</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="notifications" class="content-section">
+            <div class="notifications">
+                <h2 style="margin-bottom: 20px; color: #1e293b;">Notificaciones Recientes</h2>
+
+                <div class="notification-item">
+                    <div class="notification-title">Nuevo material publicado - Desarrollo de Software</div>
+                    <p>La profesora Laura Martínez ha compartido recursos adicionales para el proyecto final</p>
+                    <div class="notification-date">Hace 1 hora</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Calificación disponible - Biología Molecular</div>
+                    <p>Tu calificación del laboratorio está disponible para consulta</p>
+                    <div class="notification-date">Hace 3 horas</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Recordatorio - Entrega próxima</div>
+                    <p>No olvides entregar tu proyecto de Matemáticas Avanzadas mañana</p>
+                    <div class="notification-date">Hace 5 horas</div>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-title">Foro de discusión abierto</div>
+                    <p>Se ha abierto un nuevo tema de discusión en Redacción Académica</p>
+                    <div class="notification-date">Hace 1 día</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+            <div class="card-popup">
+                <h3 class="title-popup">Desarrollo de Software</h3>
+                <br>
+                <div class="tabs-popup">
+                    <button class="tab-popup active" onclick="openTab(0)">Acceder</button>
+                    <button class="tab-popup" onclick="openTab(1)">Recursos</button>
+                </div>
+
+                <div class="content-popup active">
+                    <h3>Notas</h3>
+
+                    <table class="notas">
+                        <tr>
+                            <th>Evaluación</th>
+                            <th></th>
+                            <th>Nota</th>
+                        </tr>
+                        <tr>
+                            <td>TA Tarea Académica</td>
+                            <td>10%</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>PC1 Práctica Calificada 1</td>
+                            <td>10%</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>EXPA Examen Parcial</td>
+                            <td>25%</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>PC2 Práctica Calificada 2</td>
+                            <td>15%</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>PA Participación en Clase</td>
+                            <td>10%</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>EXFN Examen Final</td>
+                            <td>30%</td>
+                            <td>—</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="content-popup">
+                    <h3>Material del Curso</h3>
+                    <ul>
+                        <li>Sílabo del curso (PDF)</li>
+                        <li>Presentaciones de clase</li>
+                        <li>Lecturas Complementarias</li>
+                    </ul>
+
+                    <h3>Archivos Descargables</h3>
+                    <ul>
+                        <li>Proyecto base (ZIP)</li>
+                        <li>Ejercicios prácticos</li>
+                        <li>Guías de Laboratorio</li>
+                    </ul>
+
+                    <h3>Multimedia</h3>
+                    <ul>
+                        <li>Video 1: Introducción al curso</li>
+                        <li>Video 2: Fundamentos de programación</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="popup-buttons">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="popup-citas">
+        <div class="popup-citas-content">
+            <span class="close-popup" onclick="cerrarPopup()">&times;</span>
+
+            <div class="card-popup">
+                <h3 class="title-popup">Citas y Asesorías</h3>
+                <br>
+
+                <div class="citas-headers">
+                    <div class="header-psicologo">Psicólogo</div>
+                    <div class="header-disponibilidad">Disponibilidad</div>
+                </div>
+
+                <div class="citas-container">
+                    <div class="cita-row">
+                        <div class="cita-info">
+                            <p><strong>FECHA:</strong> 10-12-2025</p>
+                            <p><strong>HORA:</strong> 16:30</p>
+                            <p><strong>MODALIDAD:</strong> Virtual</p>
+                        </div>
+                        <div class="cita-disponibilidad">
+                            <button class="btn-agendar popup-cita-clic">Agendar</button>
+                        </div>
+                    </div>
+
+                    <div class="cita-row">
+                        <div class="cita-info">
+                            <p><strong>FECHA:</strong> 11-12-2025</p>
+                            <p><strong>HORA:</strong> 14:30</p>
+                            <p><strong>MODALIDAD:</strong> Presencial</p>
+                        </div>
+                        <div class="cita-disponibilidad">
+                            <button class="btn-agendar popup-cita-clic">Agendar</button>
+                        </div>
+                    </div>
+
+                    <div class="cita-row">
+                        <div class="cita-info">
+                            <p><strong>FECHA:</strong> 10-12-2025</p>
+                            <p><strong>HORA:</strong> 20:00</p>
+                            <p><strong>MODALIDAD:</strong> Presencial</p>
+                        </div>
+                        <div class="cita-disponibilidad">
+                            <button class="btn-agendar popup-cita-clic">Agendar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificacion-container"></div>
+
+    <div class="chat-bubble">
+        <div class="chat-wrapper">
+
+            <div class="chat-icon">
+                <a target="_blank" href="https://wa.me/message/54ZVGH6PRSBTK1">
+                    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="24" fill="#fff" />
+                        <g>
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M24 48C10.7452 48 0 37.2548 0 24C0 10.7452 10.7452 0 24 0C37.2548 0 48 10.7452 48 24C48 37.2548 37.2548 48 24 48ZM24.7911 37.3525C32.6595 37.3493 39.059 30.9483 39.0621 23.0815C39.0637 19.2683 37.5806 15.6828 34.8862 12.9854C32.1918 10.2879 28.6086 8.80165 24.7909 8.8C16.9248 8.8 10.5228 15.2017 10.5196 23.0702C10.5186 25.5855 11.1757 28.0405 12.4246 30.2048L10.4 37.6L17.9653 35.6155C20.0498 36.7524 22.3967 37.3517 24.7852 37.3525H24.7911Z" />
+                        </g>
+                    </svg>
+                </a>
+            </div>
+
+            <div class="chat-popup">
+                ¿Necesitas soporte?
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../estudiante/modals/acceder-recursos/acceder-recursos.js"></script>
+    <script src="../estudiante/modals/citas-asesorias/citas-asesorias.js"></script>
+    <script src="../../utils/notificacion/notificacion.js"></script>
+    <script src="estudiante.js"></script>
+</body>
+
+</html>

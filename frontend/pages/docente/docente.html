@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOMA - Portal Docente</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="docente.css" rel="stylesheet">
+    <link href="../docente/modals/asistencia/asistencia.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../utils/atencion/atencion.css">
+</head>
+
+<body>
+    <!-- ⭐ Primero cargamos auth.js -->
+    <script src="../../auth.js"></script>
+
+    <!-- ⭐ Después protegemos la página -->
+    <script>
+        // Proteger página con el rol correcto
+        auth.protectPage("docente");
+    </script>
+
+    <div class="header">
+        <!-- ⭐ Usamos auth.getMyHome() que devuelve ruta relativa correcta -->
+        <div class="logo" onclick="location.href = auth.getMyHome()">
+            SOMA
+        </div>
+        <div class="user-info">
+            <span>Docente Demo</span>
+            <div class="user-avatar">PS</div>
+            <button class="logout-btn" onclick="logout()">Salir</button>
+        </div>
+    </div>
+
+    <div class="container max-w-full">
+        <div class="subtitle">
+            PORTAL DOCENTE
+        </div>
+
+        <div class="content">
+            <div class="right">
+                <div class="info-card">
+                    <div class="info-photo"></div>
+                    <div class="info-text">
+                        <label>Luciano Robles Canales</label>
+                        <label>d145623</label>
+                        <label>Datos Personales</label>
+                    </div>
+                </div>
+
+                <div class="items">
+                    <ul>
+                        <li class="active" data-tab="programaciones">Mis clases de hoy</li>
+                        <!-- <li class="active" data-tab="programaciones">Mis programaciones</li> -->
+                        <!-- <li data-tab="asistencia">Asistencia</li> -->
+                        <li data-tab="notas">Notas</li>
+                        <li data-tab="observaciones">Observaciones</li>
+                        <!-- <li data-tab="talleres">Talleres</li> -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="left">
+                <div class="banner"></div>
+
+                <!-- <div class="header-content">
+                    <h3>MIS CLASES DE HOY</h3>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead class="header-table">
+                            <th>Hora Inicio</th>
+                            <th>Hora Fin</th>
+                            <th>Curso Sección</th>
+                            <th>Tipo</th>
+                            <th>Aula</th>
+                        </thead>
+                        <tbody class="body-table">
+                            <tr>
+                                <td>08:00</td>
+                                <td>15:30</td>
+                                <td>C845</td>
+                                <td>Remoto/Presencial</td>
+                                <td>Pabellon 2</td>
+                            </tr>
+                            <tr>
+                                <td>08:00</td>
+                                <td>15:30</td>
+                                <td>C845</td>
+                                <td>Remoto/Presencial</td>
+                                <td>Pabellon 2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="header-content">
+                    <h3>PREG - MATEMATICA II</h3>
+                </div>
+                <label>Sección: 1848</label> -->
+                <div class="tab-content show" data-content="programaciones">
+                    <div class="header-content">
+                        <h3>MIS CLASES DE HOY:</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Hora Inicio</th>
+                                <th>Hora Fin</th>
+                                <th>Curso</th>
+                                <th>Tipo</th>
+                                <th>Aula</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>8:00</td>
+                                    <td>10:00</td>
+                                    <td>Mat.III</td>
+                                    <td>Presencial</td>
+                                    <td>B2405</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th colspan="2">PREG - MATEMÁTICA III</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>Hora: 09:00 - 10:40</td>
+                                    <td>Aula: B2405</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                </div>
+
+                <div class="tab-content" data-content="asistencia">
+                    <div class="header-content">
+                        <h3>ASISTENCIAS</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="body-content">
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">CS101 - 2025-1</div>
+                                <div class="course-title">Desarrollo de Software</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">HUM105 - 2025-1</div>
+                                <div class="course-title">Redacción Academica</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="course-card">
+                            <div class="course-header">
+                                <div class="course-code">MAT201 - 2025-1</div>
+                                <div class="course-title">Matemáticas Avanzadas</div>
+                            </div>
+                            <div class="course-body">
+                                <div class="course-actions">
+                                    <button class="btn btn-primary open-popup">Registrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="notas">
+                    <div class="header-content">
+                        <h3>GESTIÓN DE NOTAS</h3>
+                    </div>
+
+                    <br>
+
+                    <div class="content">
+                        Grado: <label>PREG</label>
+                        Periodo: <label>2025-2</label>
+                        Curso: <label>Matemática II</label>
+                    </div>
+
+                    <br>
+
+                    <div class="row">
+                        Tipo Evaluación
+                        <select>
+                            <option value="" selected>Seleccione</option>
+                            <option value="1">PRACTICA CALIFICADA 1</option>
+                            <option value="2">PRACTICA CALIFICADA 2</option>
+                            <option value="3">EXAMEN FINAL</option>
+                            <option value="4">EXAMEN PARCIAL</option>
+                            <option value="5">TAREA ACADEMICA 1</option>
+                            <option value="6">TAREA ACADEMICA 2</option>
+                        </select>
+                    </div>
+
+                    <br>
+
+                    <div class="content">
+                        <span>Observación: No dejar notas en blanco, Notas de 0 a 20, NS=No se presento,
+                            RE=Retirado</span>
+                    </div>
+
+                    <br>
+
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead class="header-table">
+                                <th>Item</th>
+                                <th>Código</th>
+                                <th>Apellidos y Nombres</th>
+                                <th>Evaluación</th>
+                            </thead>
+                            <tbody class="body-table">
+                                <tr class="center">
+                                    <td>1</td>
+                                    <td>U2002145</td>
+                                    <td>10:00</td>
+                                    <td>
+                                        <input type="text" class="W-15">
+                                    </td>
+                                </tr>
+                                <tr class="center">
+                                    <td>2</td>
+                                    <td>U2002145</td>
+                                    <td>14:00</td>
+                                    <td>
+                                        <input type="text" class="W-15">
+                                    </td>
+                                </tr>
+                                <tr class="center">
+                                    <td>3</td>
+                                    <td>U2002145</td>
+                                    <td>11:00</td>
+                                    <td>
+                                        <input type="text" class="W-15">
+                                    </td>
+                                </tr>
+                                <tr class="center">
+                                    <td>4</td>
+                                    <td>U2002145</td>
+                                    <td>11:00</td>
+                                    <td>
+                                        <input type="text" class="W-15">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" data-content="observaciones">
+                    <div id="mostrarBusqueda">
+                        <div class="header-content">
+                            <h3>OBSERVACIONES </h3>
+                        </div>
+
+                        <br>
+
+                        <div class="filters">
+                            <div class="input-icon">
+                                <input type="text" class="input-search" placeholder="Nombre del estudiante">
+                                <span class="icon-search"></span>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="table-wrap">
+                            <table class="table">
+                                <thead class="header-table">
+                                    <th>Nombres</th>
+                                    <th>Código</th>
+                                    <th></th>
+                                </thead>
+                                <tbody class="body-table">
+                                    <tr class="center">
+                                        <td>Pablo Sanchez</td>
+                                        <td>U2089545</td>
+                                        <td>
+                                            <button class="logout-btn" onClick="mostrarObservaciones()">
+                                                Ingresar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="observacionesContainer" class="space-y-6 hidden">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-red-400 px-6 py-4">
+                                <div class="grid grid-cols-2 gap-4 font-bold text-gray-800 text-xl">
+                                    <div>ESTUDIANTE</div>
+                                    <div>CODIGO</div>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 border-2 border-gray-300 px-6 py-6">
+                                <div class="grid grid-cols-2 gap-4 text-lg">
+                                    <div>Pablo Sanchez</div>
+                                    <div>U2089545</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+                            <div class="bg-red-400 px-8 py-4 rounded-t-lg">
+                                <h4 class="text-2xl font-bold text-gray-800 text-center">OBSERVACIONES</h4>
+                            </div>
+                            <div class="p-8">
+                                <textarea id="observaciones"
+                                    class="w-full h-32 border border-gray-300 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                    placeholder="Registra aquí las observaciones..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-6 space-x-4">
+                            <button onclick="regresar()"
+                                class="bg-black hover:bg-gray-800 text-white font-bold text-xl px-6 py-3 rounded-full shadow-lg transition-colors">
+                                Regresar
+                            </button>
+
+                            <button onclick="handleGuardar()"
+                                class="bg-red-400 hover:bg-red-500 text-white font-bold text-xl px-12 py-4 rounded-full shadow-lg transition-colors">
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+
+            <h3>Asistencias</h3>
+
+            <br>
+
+            <div class="table-wrap-popup">
+                <table class="table">
+                    <thead class="header-table">
+                        <th>Fecha</th>
+                        <th>Alumno</th>
+                        <th>Asistencia</th>
+                    </thead>
+                    <tbody class="body-table">
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+
+                        <tr class="center">
+                            <td>21/11/2025</td>
+                            <td>Perez Garcia Luis</td>
+                            <td>
+                                <select>
+                                    <option value="" selected>Seleccione</option>
+                                    <option value="1">✅</option>
+                                    <option value="2">❌</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="popup-buttons">
+                <button class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="chat-bubble">
+        <div class="chat-wrapper">
+
+            <div class="chat-icon">
+                <a target="_blank" href="https://wa.me/message/54ZVGH6PRSBTK1">
+                    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="24" fill="#fff" />
+                        <g>
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M24 48C10.7452 48 0 37.2548 0 24C0 10.7452 10.7452 0 24 0C37.2548 0 48 10.7452 48 24C48 37.2548 37.2548 48 24 48ZM24.7911 37.3525C32.6595 37.3493 39.059 30.9483 39.0621 23.0815C39.0637 19.2683 37.5806 15.6828 34.8862 12.9854C32.1918 10.2879 28.6086 8.80165 24.7909 8.8C16.9248 8.8 10.5228 15.2017 10.5196 23.0702C10.5186 25.5855 11.1757 28.0405 12.4246 30.2048L10.4 37.6L17.9653 35.6155C20.0498 36.7524 22.3967 37.3517 24.7852 37.3525H24.7911Z" />
+                        </g>
+                    </svg>
+                </a>
+            </div>
+
+            <div class="chat-popup">
+                ¿Necesitas soporte?
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../docente/modals/asistencia/asistencia.js"></script>
+    <script src="docente.js"></script>
+</body>
+
+</html>
