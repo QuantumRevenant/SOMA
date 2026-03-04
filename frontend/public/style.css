@@ -162,8 +162,6 @@ nav a.active {
   object-fit: cover;
 }
 
-/*****************************/
-
 .social-links {
   display: flex;
   justify-content: center;
@@ -194,4 +192,69 @@ nav a.active {
 
 .icon:hover .circle {
   transform: scale(1.1);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .left {
+    padding: 40px 24px;
+    justify-content: flex-start;
+  }
+
+  .left h2 { font-size: 20px; }
+  .left h3 { font-size: 16px; }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .right {
+    padding: 24px;
+    min-height: 300px;
+  }
+
+  nav {
+    position: static;
+    margin-bottom: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .right img,
+  .img-emocional {
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .social-links {
+    gap: 16px;
+  }
+
+  .options {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .left {
+    padding: 24px 16px;
+  }
+
+  .left h2 { font-size: 18px; }
+  .left h3 { font-size: 14px; }
+
+  form input {
+    font-size: 16px;
+  }
 }
