@@ -1,21 +1,6 @@
-const TOKEN_KEY = "soma_token";
+// El token ahora vive en una cookie HttpOnly — el JS no lo toca
+// Solo guardamos el email para el "Remember Me" visual
 const EMAIL_KEY = "soma_remembered_email";
-
-export function saveToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function removeToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-export function isLogged() {
-  return !!getToken();
-}
 
 export function saveRememberedEmail(email) {
   localStorage.setItem(EMAIL_KEY, email);

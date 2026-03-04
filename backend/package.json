@@ -11,6 +11,7 @@
     "express": "^4.19.0",
     "mysql2": "^3.9.0",
     "dotenv": "^16.4.0",
-    "jsonwebtoken": "^9.0.0"
+    "jsonwebtoken": "^9.0.0",
+    "cookie-parser": "^1.4.6"
   }
 }

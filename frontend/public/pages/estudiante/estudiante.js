@@ -1,6 +1,3 @@
-import { guardPage } from "/js/guard.js";
-guardPage("estudiante");
-
 function showTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     const sections = document.querySelectorAll('.content-section');

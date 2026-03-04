@@ -1,6 +1,5 @@
 import { login } from "./api.js";
 import {
-  saveToken,
   saveRememberedEmail,
   getRememberedEmail,
   removeRememberedEmail
@@ -18,9 +17,9 @@ export function initLogin() {
   if (!form) return;
 
   // Prellenar email si fue recordado
-  const rememberedEmail = getRememberedEmail();
-  if (rememberedEmail) {
-    form.email.value = rememberedEmail;
+  const remembered = getRememberedEmail();
+  if (remembered) {
+    form.email.value = remembered;
     form.querySelector('input[type="checkbox"]').checked = true;
   }
 
@@ -32,7 +31,6 @@ export function initLogin() {
 
     try {
       const data = await login(email, password, rememberMe);
-      saveToken(data.token);
 
       if (rememberMe) {
         saveRememberedEmail(email);
@@ -40,8 +38,9 @@ export function initLogin() {
         removeRememberedEmail();
       }
 
+      // El token ya está en la cookie — solo usamos el rol para redirigir
       window.location.href = ROLE_ROUTES[data.role] ?? "/";
-    } catch (err) {
+    } catch {
       alert("Credenciales inválidas");
     }
   });

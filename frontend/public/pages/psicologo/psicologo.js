@@ -1,6 +1,3 @@
-import { guardPage } from "/js/guard.js";
-guardPage("psicologo");
-
 const btnBuscar = document.querySelector(".icon-search");
 
 btnBuscar.addEventListener('click', () => {
