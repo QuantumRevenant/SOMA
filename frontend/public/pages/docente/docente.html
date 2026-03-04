@@ -37,7 +37,7 @@
             <li data-tab="asistencia">Asistencia</li>
             <li data-tab="notas">Notas</li>
             <li data-tab="observaciones">Observaciones</li>
-            <li data-tab="talleres">Talleres</li>
+            <li data-tab="asesorias">Asesorías</li>
           </ul>
         </div>
       </div>
@@ -50,15 +50,13 @@
         <div class="tab-content show" data-content="programaciones">
           <div class="header-content">
             <h3>MIS SECCIONES</h3>
-            <select id="select-periodo">
-              <option value="">Periodo activo</option>
-            </select>
+            <select id="select-periodo"><option value="">Periodo activo</option></select>
           </div>
           <br>
           <div class="table-wrap">
             <table class="table">
               <thead class="header-table">
-                <th>Código</th><th>Curso</th><th>Sección</th><th>Periodo</th><th>Alumnos</th>
+                <tr><th>Código</th><th>Curso</th><th>Sección</th><th>Periodo</th><th>Alumnos</th></tr>
               </thead>
               <tbody class="body-table" id="tbody-secciones">
                 <tr><td colspan="5">Cargando...</td></tr>
@@ -69,27 +67,36 @@
 
         <!-- TAB: Asistencia -->
         <div class="tab-content" data-content="asistencia">
-          <div class="header-content"><h3>ASISTENCIAS</h3></div>
+          <div class="header-content"><h3>ASISTENCIA</h3></div>
           <br>
-          <div class="body-content" id="lista-asistencia">
-            <p>Cargando secciones...</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <select id="select-seccion-asist" style="width:220px"><option value="">Seleccione sección</option></select>
+            <select id="select-vista-asist" style="width:160px">
+              <option value="fecha">Ver por fecha</option>
+              <option value="alumno">Ver por alumno</option>
+            </select>
+            <input type="date" id="input-fecha-asist" style="padding:8px;border:1px solid #ccc;border-radius:6px">
+            <select id="select-alumno-asist" style="width:180px" disabled><option value="">Todos los alumnos</option></select>
+            <button class="btn btn-primary" id="btn-abrir-registro" style="padding:8px 14px">+ Registrar hoy</button>
           </div>
+          <div id="tabla-asistencia-wrap"></div>
         </div>
 
         <!-- TAB: Notas -->
         <div class="tab-content" data-content="notas">
           <div class="header-content">
             <h3>NOTAS</h3>
-            <select id="select-seccion-notas">
-              <option value="">Seleccione una sección</option>
-            </select>
+            <select id="select-seccion-notas"><option value="">Seleccione una sección</option></select>
           </div>
           <br>
-          <div id="tabla-notas-wrap" class="table-wrap" style="display:none">
-            <table class="table">
-              <thead class="header-table" id="thead-notas"></thead>
-              <tbody class="body-table" id="tbody-notas"></tbody>
-            </table>
+          <div id="notas-wrap" style="display:none">
+            <div id="panel-evaluaciones" style="margin-bottom:16px;padding:12px;border:1px solid #e5e7eb;border-radius:8px"></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead class="header-table" id="thead-notas"></thead>
+                <tbody class="body-table" id="tbody-notas"></tbody>
+              </table>
+            </div>
             <br>
             <button class="btn btn-primary" id="btn-guardar-notas">Guardar notas</button>
           </div>
@@ -99,25 +106,58 @@
         <div class="tab-content" data-content="observaciones">
           <div class="header-content"><h3>OBSERVACIONES</h3></div>
           <br>
-          <div class="body-content">
-            <select id="select-seccion-obs" style="width:100%;margin-bottom:12px">
-              <option value="">Seleccione una sección</option>
-            </select>
-            <select id="select-alumno-obs" style="width:100%;margin-bottom:12px" disabled>
-              <option value="">Seleccione un alumno</option>
-            </select>
-            <textarea id="textarea-obs" rows="4" placeholder="Escriba la observación..." style="width:100%;padding:8px;box-sizing:border-box"></textarea>
-            <br><br>
-            <button class="btn btn-primary" id="btn-guardar-obs">Guardar observación</button>
-            <p id="msg-obs" style="margin-top:8px"></p>
+          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <select id="select-seccion-obs" style="width:220px"><option value="">Seleccione sección</option></select>
+            <select id="select-alumno-obs" style="width:200px" disabled><option value="">Seleccione alumno</option></select>
+          </div>
+          <div id="obs-contenido"></div>
+          <br>
+          <div style="padding:12px;border:1px solid #e5e7eb;border-radius:8px">
+            <h4 style="margin-bottom:8px">Nueva observación</h4>
+            <textarea id="textarea-obs" rows="3"
+              placeholder="Escriba la observación..."
+              style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;font-size:14px"></textarea>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+              <button class="btn btn-primary" id="btn-guardar-obs" style="max-width:180px">Guardar observación</button>
+              <p id="msg-obs" style="margin:0;color:#27ae60"></p>
+            </div>
           </div>
         </div>
 
-        <!-- TAB: Talleres -->
-        <div class="tab-content" data-content="talleres">
-          <div class="header-content"><h3>TALLERES</h3></div>
+        <!-- TAB: Asesorías -->
+        <div class="tab-content" data-content="asesorias">
+          <div class="header-content">
+            <h3>ASESORÍAS</h3>
+            <button class="btn btn-primary" id="btn-nueva-asesoria" style="padding:8px 14px">+ Nueva asesoría</button>
+          </div>
           <br>
-          <p style="color:#666">Próximamente disponible.</p>
+          <div id="form-asesoria" style="display:none;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px">
+            <h4 style="margin-bottom:10px">Nueva asesoría</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label style="font-size:13px">Inicio</label>
+                <input type="datetime-local" id="asesoria-inicio"
+                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+              </div>
+              <div>
+                <label style="font-size:13px">Fin</label>
+                <input type="datetime-local" id="asesoria-fin"
+                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+              </div>
+              <div>
+                <label style="font-size:13px">Cupo máximo</label>
+                <input type="number" id="asesoria-cupo" value="5" min="1"
+                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+              </div>
+              <div>
+                <label style="font-size:13px">Ubicación</label>
+                <input type="text" id="asesoria-lugar" placeholder="Ej: Aula B-204 / Meet link"
+                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-guardar-asesoria" style="margin-top:12px;padding:8px 16px">Guardar</button>
+          </div>
+          <div id="lista-asesorias"></div>
         </div>
 
       </div>
@@ -128,12 +168,12 @@
   <div class="popup" id="popup-asistencia">
     <div class="popup-content">
       <span class="close-popup" id="close-popup">&times;</span>
-      <h3>Registrar Asistencia</h3>
+      <h3>Registrar Asistencia — <span id="popup-fecha"></span></h3>
       <br>
       <div class="table-wrap-popup">
         <table class="table">
           <thead class="header-table">
-            <th>Alumno</th><th>Asistencia</th>
+            <tr><th>Alumno</th><th>Estado</th></tr>
           </thead>
           <tbody class="body-table" id="tbody-popup-asistencia"></tbody>
         </table>
