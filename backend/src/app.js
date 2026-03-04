@@ -6,6 +6,7 @@ import { dirname, join } from "path";
 import pool from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import docenteRoutes from "./routes/docente.routes.js";
+import estudianteRoutes from "./routes/estudiante.routes.js";
 import { verifyPageAccess } from "./middlewares/auth.middleware.js";
 
 dotenv.config();
@@ -17,24 +18,17 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// Estáticos públicos
 app.use("/js", express.static(join(__dirname, "../frontend/public/js")));
 app.use("/style.css", express.static(join(__dirname, "../frontend/public/style.css")));
 app.use("/resources", express.static(join(__dirname, "../frontend/public/resources")));
-
-// Páginas protegidas
 app.use("/pages", verifyPageAccess, express.static(join(__dirname, "../frontend/public/pages")));
-
-// Login público
 app.use(express.static(join(__dirname, "../frontend/public")));
 
-// API
 app.use("/api", authRoutes);
 app.use("/api/docente", docenteRoutes);
+app.use("/api/estudiante", estudianteRoutes);
 
-app.get("/health", (req, res) => {
-  res.json({ status: "SOMA v0.3 running" });
-});
+app.get("/health", (req, res) => res.json({ status: "SOMA v0.3 running" }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
