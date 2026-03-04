@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 import jwt from "jsonwebtoken";
 
 export async function login(req, res) {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email y contraseña requeridos" });
@@ -10,7 +10,7 @@ export async function login(req, res) {
 
     try {
         const [rows] = await pool.query(
-            "SELECT id, email, password, role FROM users WHERE email = ?",
+            "SELECT id, email, password, role, full_name FROM users WHERE email = ?",
             [email]
         );
 
@@ -20,15 +20,15 @@ export async function login(req, res) {
 
         const user = rows[0];
 
-        // Por ahora comparación directa — luego migraremos a bcrypt
+        // TODO: migrar a bcrypt
         if (password !== user.password) {
             return res.status(401).json({ error: "Credenciales inválidas" });
         }
 
         const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
+            { id: user.id, email: user.email, role: user.role, full_name: user.full_name },
             process.env.JWT_SECRET,
-            { expiresIn: "8h" }
+            { expiresIn: rememberMe ? "30d" : "8h" }
         );
 
         return res.json({ token, role: user.role });

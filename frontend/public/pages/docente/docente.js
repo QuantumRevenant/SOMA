@@ -1,3 +1,6 @@
+import { guardPage } from "/js/guard.js";
+guardPage("docente");
+
 document.addEventListener("click", (e) => {
     const tab = e.target.closest(".items ul li");
     if (!tab) return;
