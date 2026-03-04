@@ -20,27 +20,22 @@ export async function login(req, res) {
 
         const user = rows[0];
 
-        // TODO: migrar a bcrypt
         if (password !== user.password) {
             return res.status(401).json({ error: "Credenciales inválidas" });
         }
 
         const expiresIn = rememberMe ? "30d" : "8h";
-
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role, full_name: user.full_name },
             process.env.JWT_SECRET,
             { expiresIn }
         );
 
-        // Cookie HttpOnly — JS del frontend no puede leerla ni robarla
         res.cookie("soma_token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // HTTPS en prod
-            sameSite: "strict",
-            maxAge: rememberMe
-                ? 30 * 24 * 60 * 60 * 1000  // 30 días en ms
-                : 8 * 60 * 60 * 1000        // 8h en ms
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000
         });
 
         return res.json({ role: user.role });
@@ -54,4 +49,14 @@ export async function login(req, res) {
 export function logout(req, res) {
     res.clearCookie("soma_token");
     return res.json({ ok: true });
+}
+
+// Devuelve los datos del usuario autenticado — usado por el frontend
+export function me(req, res) {
+    return res.json({
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+        full_name: req.user.full_name,
+    });
 }
