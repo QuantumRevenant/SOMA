@@ -1,12 +1,10 @@
 const KEY = "soma_auth";
 
 export function saveToken(token) {
-  localStorage.setItem(KEY, JSON.stringify(token));
+  localStorage.setItem(KEY, token);
 }
-
 export function getToken() {
-  const raw = localStorage.getItem(KEY);
-  return raw ? JSON.parse(raw) : null;
+  return localStorage.getItem(KEY);
 }
 
 export function removeToken() {

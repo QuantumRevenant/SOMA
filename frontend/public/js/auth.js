@@ -13,10 +13,15 @@ export function initLogin() {
 
     try {
       const data = await login(email, password);
-
       saveToken(data.token);
 
-      window.location.href = "/dashboard.html";
+      const routes = {
+        coordinador: "/pages/coordinador/coordinador.html",
+        docente: "/pages/docente/docente.html",
+        estudiante: "/pages/estudiante/estudiante.html",
+        psicologo: "/pages/psicologo/psicologo.html",
+      };
+      window.location.href = routes[data.role] ?? "/index.html";
     } catch (err) {
       alert("Credenciales inválidas");
     }
