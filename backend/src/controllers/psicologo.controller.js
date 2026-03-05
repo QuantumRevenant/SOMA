@@ -216,6 +216,29 @@ export async function crearSlot(req, res) {
 
 // DELETE /api/psicologo/citas/:id
 // Si tiene reserva: requiere motivo, guarda observación + notificación
+export async function editarSlot(req, res) {
+    const { starts_at, ends_at, location, capacity } = req.body;
+    if (!starts_at || !ends_at)
+        return res.status(400).json({ error: "Fecha de inicio y fin requeridas" });
+
+    try {
+        const [[slot]] = await pool.query(
+            "SELECT id FROM slots WHERE id = ? AND owner_id = ? AND type = 'cita_psicologica'",
+            [req.params.id, req.user.id]
+        );
+        if (!slot) return res.status(403).json({ error: "No autorizado" });
+
+        await pool.query(
+            "UPDATE slots SET starts_at = ?, ends_at = ?, location = ?, capacity = ? WHERE id = ?",
+            [starts_at, ends_at, location ?? null, capacity ?? 1, req.params.id]
+        );
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al editar slot" });
+    }
+}
+
 export async function eliminarSlot(req, res) {
     const { motivo } = req.body;
     const psicId = req.user.id;

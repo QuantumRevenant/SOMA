@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     initNotas();
     initObservaciones();
     initAsesorias();
+    initPopupEditarAsesoria();
 });
 
 // ── Secciones / Programaciones ────────────────────────────────────────────────
@@ -576,8 +577,16 @@ async function cargarAsesorias() {
             <div class="course-title">${s.location ?? "Sin ubicación"}</div>
           </div>
           <div class="course-body">
-            <p>Cupo: ${s.reservas}/${s.capacity}</p>
-            <div class="course-actions" style="margin-top:8px">
+            <p>Cupo: ${s.reservas}/${s.capacity}${s.reservas > 0 ? ' · <span style="color:#f39c12;font-size:12px">⚠️ Con reservas</span>' : ""}</p>
+            <div class="course-actions" style="margin-top:8px;display:flex;gap:8px">
+              <button class="btn btn-secondary btn-edit-asesoria"
+                data-id="${s.id}"
+                data-starts="${s.starts_at}"
+                data-ends="${s.ends_at}"
+                data-capacity="${s.capacity}"
+                data-location="${s.location ?? ""}"
+                data-reservas="${s.reservas}"
+                style="max-width:120px">✏️ Editar</button>
               <button class="btn btn-secondary btn-del-asesoria" data-id="${s.id}"
                 style="max-width:120px">🗑️ Eliminar</button>
             </div>
@@ -592,4 +601,50 @@ async function cargarAsesorias() {
             else alert(res?.error ?? "Error.");
         });
     });
+
+    wrap.querySelectorAll(".btn-edit-asesoria").forEach(btn => {
+        btn.addEventListener("click", () => abrirEditarAsesoria(btn.dataset));
+    });
+}
+
+let asesoriaEditId = null;
+
+function initPopupEditarAsesoria() {
+    const popup = document.getElementById("popup-editar-asesoria");
+    document.getElementById("close-popup-editar-asesoria").addEventListener("click",
+        () => popup.classList.remove("active"));
+    popup.addEventListener("click", e => {
+        if (e.target === popup) popup.classList.remove("active");
+    });
+    document.getElementById("btn-confirmar-editar-asesoria").addEventListener("click", async () => {
+        const starts_at = document.getElementById("edit-asesoria-inicio").value;
+        const ends_at = document.getElementById("edit-asesoria-fin").value;
+        const capacity = document.getElementById("edit-asesoria-cupo").value;
+        const location = document.getElementById("edit-asesoria-lugar").value;
+        const msg = document.getElementById("msg-editar-asesoria");
+        if (!starts_at || !ends_at) { msg.textContent = "Completa las fechas."; return; }
+        const res = await apiFetch(`${API}/asesorias/${asesoriaEditId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ starts_at, ends_at, capacity: parseInt(capacity) || 5, location }),
+        });
+        if (res?.ok) {
+            popup.classList.remove("active");
+            cargarAsesorias();
+        } else {
+            msg.textContent = res?.error ?? "Error al guardar.";
+        }
+    });
+}
+
+function abrirEditarAsesoria({ id, starts, ends, capacity, location, reservas }) {
+    asesoriaEditId = id;
+    document.getElementById("edit-asesoria-inicio").value = (starts ?? "").slice(0, 16);
+    document.getElementById("edit-asesoria-fin").value = (ends ?? "").slice(0, 16);
+    document.getElementById("edit-asesoria-cupo").value = capacity ?? 5;
+    document.getElementById("edit-asesoria-lugar").value = location ?? "";
+    document.getElementById("msg-editar-asesoria").textContent = "";
+    const aviso = document.getElementById("msg-editar-asesoria-reservas");
+    aviso.style.display = parseInt(reservas) > 0 ? "" : "none";
+    document.getElementById("popup-editar-asesoria").classList.add("active");
 }

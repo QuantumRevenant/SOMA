@@ -361,6 +361,28 @@ export async function createAsesoria(req, res) {
     }
 }
 
+export async function editarAsesoria(req, res) {
+    const { starts_at, ends_at, capacity, location } = req.body;
+    if (!starts_at || !ends_at)
+        return res.status(400).json({ error: "Fecha de inicio y fin requeridas" });
+    try {
+        const [check] = await pool.query(
+            "SELECT id FROM slots WHERE id = ? AND owner_id = ? AND type = 'asesoria'",
+            [req.params.id, req.user.id]
+        );
+        if (check.length === 0) return res.status(403).json({ error: "No autorizado" });
+
+        await pool.query(
+            "UPDATE slots SET starts_at = ?, ends_at = ?, capacity = ?, location = ? WHERE id = ?",
+            [starts_at, ends_at, capacity ?? 5, location ?? null, req.params.id]
+        );
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al editar asesoría" });
+    }
+}
+
 export async function deleteAsesoria(req, res) {
     try {
         const [check] = await pool.query(

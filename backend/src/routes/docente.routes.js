@@ -17,6 +17,7 @@ import {
     deleteObservacion,
     getMisAsesorias,
     createAsesoria,
+    editarAsesoria,
     deleteAsesoria,
 } from "../controllers/docente.controller.js";
 
@@ -50,6 +51,7 @@ router.delete("/observaciones/:id", deleteObservacion);
 // Asesorías
 router.get("/asesorias", getMisAsesorias);
 router.post("/asesorias", createAsesoria);
+router.put("/asesorias/:id", editarAsesoria);
 router.delete("/asesorias/:id", deleteAsesoria);
 
 export default router;
