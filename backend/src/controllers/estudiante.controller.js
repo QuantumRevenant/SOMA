@@ -184,7 +184,8 @@ export async function reservarAsesoria(req, res) {
         if (count[0].n >= slot[0].capacity) return res.status(400).json({ error: "Sin cupo disponible" });
 
         await pool.query(
-            "INSERT INTO slot_bookings (slot_id, student_id, status) VALUES (?, ?, 'confirmada')",
+            `INSERT INTO slot_bookings (slot_id, student_id, status) VALUES (?, ?, 'confirmada')
+       ON DUPLICATE KEY UPDATE status = 'confirmada'`,
             [req.params.id, req.user.id]
         );
         res.json({ ok: true });
@@ -326,7 +327,8 @@ export async function reservarCita(req, res) {
         if (count[0].n >= slot[0].capacity) return res.status(400).json({ error: "Sin cupo disponible" });
 
         await pool.query(
-            "INSERT INTO slot_bookings (slot_id, student_id, status) VALUES (?, ?, 'confirmada')",
+            `INSERT INTO slot_bookings (slot_id, student_id, status) VALUES (?, ?, 'confirmada')
+       ON DUPLICATE KEY UPDATE status = 'confirmada'`,
             [req.params.id, req.user.id]
         );
         res.json({ ok: true });
@@ -339,6 +341,19 @@ export async function reservarCita(req, res) {
 // DELETE /api/estudiante/citas/:id/reservar
 export async function cancelarCita(req, res) {
     try {
+        const [[slot]] = await pool.query(
+            "SELECT starts_at FROM slots WHERE id = ?",
+            [req.params.id]
+        );
+        if (!slot) return res.status(404).json({ error: "Cita no encontrada" });
+
+        const horasRestantes = (new Date(slot.starts_at) - new Date()) / (1000 * 60 * 60);
+        if (horasRestantes < 24) {
+            return res.status(400).json({
+                error: "No puedes cancelar con menos de 24 horas de anticipación"
+            });
+        }
+
         await pool.query(
             "UPDATE slot_bookings SET status = 'cancelada' WHERE slot_id = ? AND student_id = ?",
             [req.params.id, req.user.id]

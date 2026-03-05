@@ -26,6 +26,7 @@ function estadoBadge(status) {
 }
 
 function isPast(dt) { return new Date(dt) < new Date(); }
+function isWithin24h(dt) { return (new Date(dt) - new Date()) < 24 * 60 * 60 * 1000; }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
@@ -41,7 +42,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.replace("/");
     });
 
-    // Tabs principales
     document.querySelectorAll(".tab[data-tab]").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll(".tab[data-tab]").forEach(t => t.classList.remove("active"));
@@ -51,19 +51,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // Selector de ciclo (cursos) — "" = todos, valor = filtro específico
     document.getElementById("select-ciclo").addEventListener("change", e =>
         cargarCursos(e.target.value)
     );
 
-    // Selector de ciclo (calificaciones) — siempre tiene valor
     document.getElementById("select-ciclo-grades").addEventListener("change", e => {
         const v = e.target.value;
         const lista = todosLosCursos.filter(c => c.period_label === v);
         renderGrades(lista, v);
     });
 
-    // Tabs de servicios
     document.querySelectorAll(".servicio-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll(".servicio-btn").forEach(b => b.classList.remove("active"));
@@ -74,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     initPopupCurso();
+    initPopupConfirm();
 
     await Promise.all([
         cargarResumen(),
@@ -89,57 +87,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function cargarResumen() {
     const data = await apiFetch(`${API}/resumen`);
     if (!data) return;
-    document.getElementById("stat-cursos").textContent =
-        data.cursos_activos ?? "—";
+    document.getElementById("stat-cursos").textContent = data.cursos_activos ?? "—";
     document.getElementById("stat-promedio").textContent =
         data.promedio_general !== null ? data.promedio_general : "—";
 }
 
-// ── Todos los cursos ─────────────────────────────────────────────────────────
+// ── Todos los cursos ──────────────────────────────────────────────────────────
 let todosLosCursos = [];
 let periodosCache = [];
 
 async function cargarCursos(filtro = "") {
-    // En la primera carga pedimos todo para tener periodosCache, luego filtramos
-    const fetchAll = filtro === "__activo__" || periodosCache.length === 0;
-    const url = fetchAll ? `${API}/cursos` : `${API}/cursos?periodo=${encodeURIComponent(filtro)}`;
-    const data = await apiFetch(url);
-    if (!data) return;
+    if (todosLosCursos.length === 0) {
+        const data = await apiFetch(`${API}/cursos`);
+        if (!data) return;
 
-    // Primera carga: poblar selectores de periodo
-    if (periodosCache.length === 0 && data.periodos?.length) {
+        todosLosCursos = data.cursos;
         periodosCache = data.periodos;
         const activo = data.periodos.find(p => p.is_active);
-        // select-ciclo (Mis Cursos): incluye "Todos los ciclos"
+
         const selCursos = document.getElementById("select-ciclo");
         selCursos.innerHTML = "";
         selCursos.add(new Option("Todos los ciclos", ""));
-        data.periodos.forEach(p => {
-            const label = p.label + (p.is_active ? " (actual)" : "");
-            selCursos.add(new Option(label, p.label));
-        });
-        // Default: todos (muestra agrupado)
-        selCursos.value = "";
+        data.periodos.forEach(p =>
+            selCursos.add(new Option(p.label + (p.is_active ? " (actual)" : ""), p.label))
+        );
+        selCursos.value = filtro;
 
-        // select-ciclo-grades (Calificaciones): sin "Todos", default activo
         const selGrades = document.getElementById("select-ciclo-grades");
         selGrades.innerHTML = "";
-        data.periodos.forEach(p => {
-            const label = p.label + (p.is_active ? " (actual)" : "");
-            selGrades.add(new Option(label, p.label));
-        });
+        data.periodos.forEach(p =>
+            selGrades.add(new Option(p.label + (p.is_active ? " (actual)" : ""), p.label))
+        );
         if (activo) selGrades.value = activo.label;
-        todosLosCursos = data.cursos;
-        // Si era la primera carga, filtrar al activo
-        if (filtro === "__activo__" && activo) {
-            filtro = activo.label;
-        }
     }
 
-    // Si trajimos todo pero hay filtro, filtrar en cliente
-    const cursos = (fetchAll && filtro && filtro !== "__activo__")
+    const cursos = filtro
         ? todosLosCursos.filter(c => c.period_label === filtro)
-        : data.cursos;
+        : todosLosCursos;
+
     const grid = document.getElementById("courses-grid");
 
     if (cursos.length === 0) {
@@ -149,20 +134,18 @@ async function cargarCursos(filtro = "") {
     }
 
     if (filtro) {
-        // Ciclo específico — grid plano sin subtítulo
         grid.innerHTML = `<div class="courses-grid-inner">${cursos.map(c => buildCourseCard(c)).join("")}</div>`;
     } else {
-        // Todos — agrupado por ciclo, cada grupo con su propio grid
         const porPeriodo = {};
         cursos.forEach(c => {
             if (!porPeriodo[c.period_label]) porPeriodo[c.period_label] = [];
             porPeriodo[c.period_label].push(c);
         });
         grid.innerHTML = Object.entries(porPeriodo).map(([periodo, lista]) => `
-      <div class="periodo-group">
-        <div class="periodo-group-titulo">${periodo}${lista[0].is_active ? ' <span class="badge-actual">Actual</span>' : ""}</div>
-        <div class="courses-grid-inner">${lista.map(c => buildCourseCard(c)).join("")}</div>
-      </div>`).join("");
+            <div class="periodo-group">
+                <div class="periodo-group-titulo">${periodo}${lista[0].is_active ? ' <span class="badge-actual">Actual</span>' : ""}</div>
+                <div class="courses-grid-inner">${lista.map(c => buildCourseCard(c)).join("")}</div>
+            </div>`).join("");
     }
 
     renderGrades(cursos, filtro);
@@ -206,16 +189,13 @@ function buildCourseCard(c) {
 // ── Calificaciones ────────────────────────────────────────────────────────────
 function renderGrades(cursos, filtro = "") {
     const wrap = document.getElementById("grades-wrap");
-
-    // Sincronizar selector de grades con el filtro aplicado
     if (filtro) {
         const sel = document.getElementById("select-ciclo-grades");
         if (sel.value !== filtro) sel.value = filtro;
     }
-
     if (cursos.length === 0) {
         wrap.innerHTML = `<h2 style="margin-bottom:20px;color:#1e293b">Mis Calificaciones</h2>
-      <p style="color:#999">No hay cursos para este ciclo.</p>`;
+            <p style="color:#999">No hay cursos para este ciclo.</p>`;
         return;
     }
     wrap.innerHTML = `
@@ -224,7 +204,7 @@ function renderGrades(cursos, filtro = "") {
       ${cursos.map((c, i) => `
         <button class="tab ${i === 0 ? "active" : ""}" data-gtab="${c.enrollment_id}"
           style="padding:8px 16px;font-size:14px">
-          ${c.code}${!c.is_active ? "" : ' <small style="font-size:10px;opacity:.7">●</small>'}
+          ${c.code}${c.is_active ? ' <small style="font-size:10px;opacity:.7">●</small>' : ""}
         </button>`).join("")}
     </div>
     <div id="grade-content"></div>`;
@@ -244,7 +224,6 @@ async function cargarNotasGrade(enrollmentId) {
     wrap.innerHTML = "<p style='color:#999'>Cargando...</p>";
     const data = await apiFetch(`${API}/cursos/${enrollmentId}/notas`);
     if (!data) return;
-
     wrap.innerHTML = `
     <div class="notification-item">
       <div style="overflow-x:auto">
@@ -254,7 +233,8 @@ async function cargarNotasGrade(enrollmentId) {
             ${data.notas.map(n => `
               <tr>
                 <td>${n.name}</td><td>${n.weight}%</td>
-                <td>${n.score !== null ? `<strong>${n.score}</strong>`
+                <td>${n.score !== null
+            ? `<strong>${n.score}</strong>`
             : "<span style='color:#999'>Pendiente</span>"}</td>
               </tr>`).join("")}
           </tbody>
@@ -271,17 +251,14 @@ async function cargarNotasGrade(enrollmentId) {
     </div>`;
 }
 
-// ── Popup curso (notas + asistencia) ─────────────────────────────────────────
+// ── Popup curso ───────────────────────────────────────────────────────────────
 function initPopupCurso() {
     const popup = document.getElementById("popup-curso");
-
     document.getElementById("close-popup-curso").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
         if (e.target === popup) popup.classList.remove("active");
     });
-
-    // Tabs del popup
     document.querySelectorAll(".tab-popup[data-ptab]").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll(".tab-popup").forEach(t => t.classList.remove("active"));
@@ -290,12 +267,9 @@ function initPopupCurso() {
             document.getElementById(`panel-${btn.dataset.ptab}`).classList.add("active");
         });
     });
-
-    // Delegación — cualquier btn-ver-curso en el documento
     document.addEventListener("click", async e => {
         const btn = e.target.closest(".btn-ver-curso");
         if (!btn) return;
-
         const enrollmentId = btn.dataset.enrollment;
         document.getElementById("popup-titulo").textContent = btn.dataset.nombre;
         document.getElementById("popup-docente").textContent = `Prof. ${btn.dataset.docente}`;
@@ -306,46 +280,40 @@ function initPopupCurso() {
         document.getElementById("resumen-asistencia").innerHTML = "";
         document.getElementById("promedio-popup").textContent = "—";
         document.getElementById("peso-completado").textContent = "";
-
-        // Activar tab notas por defecto
         document.querySelectorAll(".tab-popup").forEach(t => t.classList.remove("active"));
         document.querySelectorAll(".content-popup").forEach(p => p.classList.remove("active"));
         document.querySelector(".tab-popup[data-ptab='notas']").classList.add("active");
         document.getElementById("panel-notas").classList.add("active");
-
         popup.classList.add("active");
 
-        // Cargar ambos en paralelo
         const [notas, asist] = await Promise.all([
             apiFetch(`${API}/cursos/${enrollmentId}/notas`),
             apiFetch(`${API}/cursos/${enrollmentId}/asistencia`),
         ]);
-
         if (notas) {
             document.getElementById("tbody-notas-popup").innerHTML =
                 notas.notas.map(n => `
-          <tr>
-            <td>${n.name}</td><td>${n.weight}%</td>
-            <td>${n.score !== null ? `<strong>${n.score}</strong>`
+                <tr>
+                  <td>${n.name}</td><td>${n.weight}%</td>
+                  <td>${n.score !== null
+                        ? `<strong>${n.score}</strong>`
                         : "<span style='color:#999'>—</span>"}</td>
-          </tr>`).join("");
+                </tr>`).join("");
             document.getElementById("promedio-popup").textContent =
                 notas.promedio !== null ? notas.promedio : "—";
             if (notas.peso_completado)
                 document.getElementById("peso-completado").textContent =
                     ` (${notas.peso_completado}% evaluado)`;
         }
-
         if (asist) {
             const r = asist.resumen;
             document.getElementById("resumen-asistencia").innerHTML = `
-        <div class="asist-stat"><span>${r.presente}</span>Presentes</div>
-        <div class="asist-stat asist-tardanza"><span>${r.tardanza}</span>Tardanzas</div>
-        <div class="asist-stat asist-ausente"><span>${r.ausente}</span>Ausencias</div>
-        <div class="asist-stat asist-pct">
-          <span>${r.pct !== null ? r.pct + "%" : "—"}</span>Asistencia
-        </div>`;
-
+            <div class="asist-stat"><span>${r.presente}</span>Presentes</div>
+            <div class="asist-stat asist-tardanza"><span>${r.tardanza}</span>Tardanzas</div>
+            <div class="asist-stat asist-ausente"><span>${r.ausente}</span>Ausencias</div>
+            <div class="asist-stat asist-pct">
+              <span>${r.pct !== null ? r.pct + "%" : "—"}</span>Asistencia
+            </div>`;
             document.getElementById("tbody-asistencia").innerHTML =
                 asist.registros.length === 0
                     ? "<tr><td colspan='2' style='color:#999;text-align:center'>Sin registros aún.</td></tr>"
@@ -363,13 +331,71 @@ function cupoLabel(reservas, capacity) {
     return `<span style="color:${color};font-weight:bold">${libre}</span>/${capacity} cupos`;
 }
 
+// ── Popup de confirmación ─────────────────────────────────────────────────────
+let _confirmFn = null;
+
+function initPopupConfirm() {
+    document.getElementById("btn-confirm-ok").addEventListener("click", () => {
+        const fn = _confirmFn;
+        cerrarConfirm();
+        if (fn) fn();
+    });
+    document.getElementById("btn-confirm-cancel").addEventListener("click", cerrarConfirm);
+    document.getElementById("popup-confirm").addEventListener("click", e => {
+        if (e.target === document.getElementById("popup-confirm")) cerrarConfirm();
+    });
+}
+
+function cerrarConfirm() {
+    document.getElementById("popup-confirm").classList.remove("active");
+    _confirmFn = null;
+}
+
+function pedirConfirm({ titulo, msg, icono = "❓", labelOk = "Confirmar", labelCancel = "Volver", esDestructivo = false, onConfirm }) {
+    document.getElementById("confirm-titulo").textContent = titulo;
+    document.getElementById("confirm-msg").textContent = msg;
+    document.getElementById("confirm-icon").textContent = icono;
+    document.getElementById("btn-confirm-cancel").textContent = labelCancel;
+    const btnOk = document.getElementById("btn-confirm-ok");
+    btnOk.textContent = labelOk;
+    btnOk.className = `btn ${esDestructivo ? "btn-cancelar" : "btn-primary"}`;
+    _confirmFn = onConfirm;
+    document.getElementById("popup-confirm").classList.add("active");
+}
+
 async function toggleServicio(endpoint, id, yaHecho, btnEl, recargar) {
-    btnEl.disabled = true;
     const accion = endpoint === "talleres" ? "inscribir" : "reservar";
-    const method = yaHecho ? "DELETE" : "POST";
-    const res = await apiFetch(`${API}/${endpoint}/${id}/${accion}`, { method });
-    if (res?.ok) { await recargar(); await cargarMisServicios(); }
-    else { alert(res?.error ?? "Error"); btnEl.disabled = false; }
+    const tipoLabel = endpoint === "talleres" ? "taller"
+        : endpoint === "asesorias" ? "asesoría" : "cita psicológica";
+    const titulo = yaHecho ? `Cancelar ${tipoLabel}` : `Reservar ${tipoLabel}`;
+    const msg = yaHecho
+        ? `¿Seguro que quieres cancelar tu inscripción a esta ${tipoLabel}?`
+        : `¿Confirmar reserva para esta ${tipoLabel}?`;
+    const icono = yaHecho ? "⚠️" : "✅";
+    const labelOk = yaHecho ? "Sí, cancelar" : "Confirmar";
+
+    pedirConfirm({
+        titulo, msg, icono, labelOk,
+        esDestructivo: yaHecho,
+        onConfirm: async () => {
+            btnEl.disabled = true;
+            const method = yaHecho ? "DELETE" : "POST";
+            const res = await apiFetch(`${API}/${endpoint}/${id}/${accion}`, { method });
+            if (res?.ok) {
+                await recargar();
+                await cargarMisServicios();
+            } else {
+                pedirConfirm({
+                    titulo: "No se pudo completar",
+                    msg: res?.error ?? "Ocurrió un error inesperado.",
+                    icono: "❌",
+                    labelOk: "Entendido",
+                    onConfirm: () => { },
+                });
+                btnEl.disabled = false;
+            }
+        },
+    });
 }
 
 function bindServicioBtns(tipo, recargar) {
@@ -380,25 +406,35 @@ function bindServicioBtns(tipo, recargar) {
 }
 
 function buildServicioCard(item, tipo) {
-    const yaHecho = true; // siempre en "mis inscripciones"
     const pasado = isPast(item.ends_at ?? item.starts_at);
+    const esCita = tipo === "cita_psicologica";
+    const dentro24h = !pasado && esCita && isWithin24h(item.starts_at);
+    const endpoint = tipo === "asesoria" ? "asesorias" : "citas";
+    const titulo = tipo === "taller" ? item.title
+        : tipo === "asesoria" ? "Asesoría — " + item.owner_name
+            : "Cita psicológica — " + item.owner_name;
+    const fechaFin = item.ends_at ? " — " + fmt(item.ends_at) : "";
+    const lugar = item.location ? `<div class="servicio-lugar">📍 ${item.location}</div>` : "";
+    const badgePas = pasado ? `<span class="badge-pasado">Finalizado</span>` : "";
+
+    let btnHtml = "";
+    if (!pasado && tipo !== "taller") {
+        const btnClass = dentro24h ? "btn-sin-cupo" : "btn-cancelar";
+        const btnTxt = dentro24h ? "No cancelable (-24h)" : "Cancelar";
+        const btnDis = dentro24h ? "disabled" : "";
+        btnHtml = `<button class="btn ${btnClass} btn-servicio"
+            data-id="${item.id}" data-tipo="${endpoint}" data-hecho="1" ${btnDis}>${btnTxt}</button>`;
+    }
+
     return `
     <div class="servicio-card ${pasado ? "servicio-pasado" : ""}">
       <div class="servicio-info">
-        ${pasado ? `<span class="badge-pasado">Finalizado</span>` : ""}
-        <div class="servicio-titulo">
-          ${tipo === "taller" ? item.title : tipo === "asesoria"
-            ? `Asesoría — ${item.owner_name}` : `Cita psicológica — ${item.owner_name}`}
-        </div>
-        <div class="servicio-fecha">📅 ${fmt(item.starts_at)}${item.ends_at ? ` — ${fmt(item.ends_at)}` : ""}</div>
-        ${item.location ? `<div class="servicio-lugar">📍 ${item.location}</div>` : ""}
+        ${badgePas}
+        <div class="servicio-titulo">${titulo}</div>
+        <div class="servicio-fecha">📅 ${fmt(item.starts_at)}${fechaFin}</div>
+        ${lugar}
       </div>
-      ${!pasado && tipo !== "taller" ? `
-        <button class="btn btn-cancelar btn-servicio"
-          data-id="${item.id}" data-tipo="${tipo === "asesoria" ? "asesorias" : "citas"}"
-          data-hecho="1">
-          Cancelar
-        </button>` : ""}
+      ${btnHtml}
     </div>`;
 }
 
@@ -416,19 +452,19 @@ async function cargarAsesorias() {
         : data.map(a => {
             const sinCupo = !a.ya_reservado && (a.capacity - a.reservas) <= 0;
             return `
-        <div class="servicio-card">
-          <div class="servicio-info">
-            <div class="servicio-titulo">Prof. ${a.docente_name}</div>
-            <div class="servicio-fecha">📅 ${fmt(a.starts_at)} — ${fmt(a.ends_at)}</div>
-            ${a.location ? `<div class="servicio-lugar">📍 ${a.location}</div>` : ""}
-            <div class="servicio-cupo">${cupoLabel(a.reservas, a.capacity)}</div>
-          </div>
-          <button class="btn ${a.ya_reservado ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
-            data-id="${a.id}" data-tipo="asesorias" data-hecho="${a.ya_reservado ? 1 : 0}"
-            ${sinCupo ? "disabled" : ""}>
-            ${a.ya_reservado ? "Cancelar reserva" : sinCupo ? "Sin cupo" : "Reservar"}
-          </button>
-        </div>`;
+            <div class="servicio-card">
+              <div class="servicio-info">
+                <div class="servicio-titulo">Prof. ${a.docente_name}</div>
+                <div class="servicio-fecha">📅 ${fmt(a.starts_at)} — ${fmt(a.ends_at)}</div>
+                ${a.location ? `<div class="servicio-lugar">📍 ${a.location}</div>` : ""}
+                <div class="servicio-cupo">${cupoLabel(a.reservas, a.capacity)}</div>
+              </div>
+              <button class="btn ${a.ya_reservado ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
+                data-id="${a.id}" data-tipo="asesorias" data-hecho="${a.ya_reservado ? 1 : 0}"
+                ${sinCupo ? "disabled" : ""}>
+                ${a.ya_reservado ? "Cancelar reserva" : sinCupo ? "Sin cupo" : "Reservar"}
+              </button>
+            </div>`;
         }).join("");
 
     bindServicioBtns("asesorias", cargarAsesorias);
@@ -448,20 +484,20 @@ async function cargarTalleres() {
         : data.map(t => {
             const sinCupo = !t.ya_inscrito && (t.capacity - t.inscritos) <= 0;
             return `
-        <div class="servicio-card">
-          <div class="servicio-info">
-            <div class="servicio-titulo">${t.title}</div>
-            ${t.description ? `<p style="font-size:13px;color:#555;margin:4px 0">${t.description}</p>` : ""}
-            <div class="servicio-fecha">📅 ${fmt(t.starts_at)} — ${fmt(t.ends_at)}</div>
-            ${t.location ? `<div class="servicio-lugar">📍 ${t.location}</div>` : ""}
-            <div class="servicio-cupo">${cupoLabel(t.inscritos, t.capacity)}</div>
-          </div>
-          <button class="btn ${t.ya_inscrito ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
-            data-id="${t.id}" data-tipo="talleres" data-hecho="${t.ya_inscrito ? 1 : 0}"
-            ${sinCupo ? "disabled" : ""}>
-            ${t.ya_inscrito ? "Cancelar inscripción" : sinCupo ? "Sin cupo" : "Inscribirme"}
-          </button>
-        </div>`;
+            <div class="servicio-card">
+              <div class="servicio-info">
+                <div class="servicio-titulo">${t.title}</div>
+                ${t.description ? `<p style="font-size:13px;color:#555;margin:4px 0">${t.description}</p>` : ""}
+                <div class="servicio-fecha">📅 ${fmt(t.starts_at)} — ${fmt(t.ends_at)}</div>
+                ${t.location ? `<div class="servicio-lugar">📍 ${t.location}</div>` : ""}
+                <div class="servicio-cupo">${cupoLabel(t.inscritos, t.capacity)}</div>
+              </div>
+              <button class="btn ${t.ya_inscrito ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
+                data-id="${t.id}" data-tipo="talleres" data-hecho="${t.ya_inscrito ? 1 : 0}"
+                ${sinCupo ? "disabled" : ""}>
+                ${t.ya_inscrito ? "Cancelar inscripción" : sinCupo ? "Sin cupo" : "Inscribirme"}
+              </button>
+            </div>`;
         }).join("");
 
     bindServicioBtns("talleres", cargarTalleres);
@@ -477,20 +513,26 @@ async function cargarCitas() {
         ? "<p style='color:#999'>No hay citas psicológicas disponibles próximamente.</p>"
         : data.map(c => {
             const sinCupo = !c.ya_reservado && (c.capacity - c.reservas) <= 0;
+            const dentro24h = c.ya_reservado && isWithin24h(c.starts_at);
+            const btnClass = c.ya_reservado
+                ? (dentro24h ? "btn-sin-cupo" : "btn-cancelar")
+                : sinCupo ? "btn-sin-cupo" : "btn-primary";
+            const btnTxt = c.ya_reservado
+                ? (dentro24h ? "No cancelable (-24h)" : "Cancelar reserva")
+                : sinCupo ? "Sin cupo" : "Reservar";
+            const btnDis = sinCupo || dentro24h ? "disabled" : "";
             return `
-        <div class="servicio-card">
-          <div class="servicio-info">
-            <div class="servicio-titulo">Psic. ${c.psicologo_name}</div>
-            <div class="servicio-fecha">📅 ${fmt(c.starts_at)} — ${fmt(c.ends_at)}</div>
-            ${c.location ? `<div class="servicio-lugar">📍 ${c.location}</div>` : ""}
-            <div class="servicio-cupo">${cupoLabel(c.reservas, c.capacity)}</div>
-          </div>
-          <button class="btn ${c.ya_reservado ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
-            data-id="${c.id}" data-tipo="citas" data-hecho="${c.ya_reservado ? 1 : 0}"
-            ${sinCupo ? "disabled" : ""}>
-            ${c.ya_reservado ? "Cancelar reserva" : sinCupo ? "Sin cupo" : "Reservar"}
-          </button>
-        </div>`;
+            <div class="servicio-card">
+              <div class="servicio-info">
+                <div class="servicio-titulo">Psic. ${c.psicologo_name}</div>
+                <div class="servicio-fecha">📅 ${fmt(c.starts_at)} — ${fmt(c.ends_at)}</div>
+                ${c.location ? `<div class="servicio-lugar">📍 ${c.location}</div>` : ""}
+                <div class="servicio-cupo">${cupoLabel(c.reservas, c.capacity)}</div>
+              </div>
+              <button class="btn ${btnClass} btn-servicio"
+                data-id="${c.id}" data-tipo="citas" data-hecho="${c.ya_reservado ? 1 : 0}"
+                ${btnDis}>${btnTxt}</button>
+            </div>`;
         }).join("");
 
     bindServicioBtns("citas", cargarCitas);
@@ -511,8 +553,8 @@ async function cargarMisServicios() {
     const seccion = (titulo, items, tipo) => {
         if (items.length === 0) return "";
         return `
-      <h3 style="margin:16px 0 8px;color:#1e293b">${titulo}</h3>
-      ${items.map(i => buildServicioCard(i, tipo)).join("")}`;
+        <h3 style="margin:16px 0 8px;color:#1e293b">${titulo}</h3>
+        ${items.map(i => buildServicioCard(i, tipo)).join("")}`;
     };
 
     wrap.innerHTML =
@@ -520,17 +562,37 @@ async function cargarMisServicios() {
         seccion("Talleres inscritos", data.talleres, "taller") +
         seccion("Citas psicológicas", data.citas, "cita_psicologica");
 
-    // Bind cancelar en mis inscripciones
     wrap.querySelectorAll(".btn-servicio").forEach(btn => {
         btn.addEventListener("click", () => {
             const tipo = btn.dataset.tipo;
             const accion = tipo === "talleres" ? "inscribir" : "reservar";
-            btn.disabled = true;
-            apiFetch(`${API}/${tipo}/${btn.dataset.id}/${accion}`, { method: "DELETE" })
-                .then(res => {
-                    if (res?.ok) { cargarMisServicios(); cargarAsesorias(); cargarCitas(); cargarTalleres(); }
-                    else { alert(res?.error ?? "Error"); btn.disabled = false; }
-                });
+            const tipoLabel = tipo === "asesorias" ? "asesoría" : "cita psicológica";
+            pedirConfirm({
+                titulo: `Cancelar ${tipoLabel}`,
+                msg: `¿Seguro que quieres cancelar esta ${tipoLabel}?`,
+                icono: "⚠️",
+                labelOk: "Sí, cancelar",
+                esDestructivo: true,
+                onConfirm: async () => {
+                    btn.disabled = true;
+                    const res = await apiFetch(`${API}/${tipo}/${btn.dataset.id}/${accion}`, { method: "DELETE" });
+                    if (res?.ok) {
+                        cargarMisServicios();
+                        cargarAsesorias();
+                        cargarCitas();
+                        cargarTalleres();
+                    } else {
+                        pedirConfirm({
+                            titulo: "Error",
+                            msg: res?.error ?? "Error inesperado.",
+                            icono: "❌",
+                            labelOk: "Entendido",
+                            onConfirm: () => { }
+                        });
+                        btn.disabled = false;
+                    }
+                }
+            });
         });
     });
 }
