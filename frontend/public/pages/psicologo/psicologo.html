@@ -1,254 +1,156 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOMA - Portal Psicólogo</title>
-    <link href="psicologo.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOMA - Portal Psicólogo</title>
+  <link href="/pages/psicologo/psicologo.css" rel="stylesheet">
 </head>
-
 <body>
-    <!-- ⭐ Primero cargamos auth.js -->
-    <script src="../../auth.js"></script>
 
-    <!-- ⭐ Después protegemos la página -->
-    <script>
-        auth.protectPage("psicologo");
-    </script>
+  <div class="header">
+    <div class="logo" onclick="location.href='/'">SOMA</div>
+    <div class="user-info">
+      <span id="user-name"></span>
+      <div class="user-avatar" id="user-avatar"></div>
+      <button class="logout-btn" id="btn-logout">Salir</button>
+    </div>
+  </div>
 
-    <div class="header">
-        <!-- ⭐ Logo usa auth.getMyHome() -->
-        <div class="logo" onclick="location.href = auth.getMyHome()">
-            SOMA
-        </div>
-        <div class="user-info">
-            <span>Psicólogo Demo</span>
-            <div class="user-avatar">PS</div>
-            <button class="logout-btn" onclick="auth.logout()">Salir</button>
-        </div>
+  <div class="container">
+
+    <div class="welcome-banner">
+      <h1>Portal Psicólogo</h1>
+      <p>Gestión de citas y seguimiento de estudiantes</p>
     </div>
 
-    <div class="container">
-        <div class="subtitle">PORTAL PSICÓLOGO</div>
-
-        <div class="content">
-            <!-- Panel derecho -->
-            <div class="right">
-                <div class="info-card">
-                    <div class="info-photo"></div>
-                    <div class="info-text">
-                        <label>Juan Perez Quiñonez</label>
-                        <label>d14001</label>
-                        <label>Datos Personales</label>
-                    </div>
-                </div>
-
-                <div class="items">
-                    <ul>
-                        <li class="active" data-tab="evaluaciones">Evaluaciones</li>
-                        <li data-tab="sesiones">Sesiones</li>
-                        <li data-tab="disponibilidad">Disponibilidad</li>
-                        <li data-tab="citas">Citas Agendadas</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Panel izquierdo -->
-            <div class="left">
-
-                <div class="banner">
-                </div>
-
-
-                <div class="tab-content show" data-content="evaluaciones">
-                    <div class="header-content">
-                        <h3>Evaluaciones Psicologicas</h3>
-                    </div>
-
-                    <div class="filters">
-                        <div class="input-icon">
-                            <input type="text" class="input-search" placeholder="Nombre del estudiante">
-                            <span class="icon-search"></span>
-                        </div>
-
-                        <input type="date" placeholder="Fecha de cita">
-
-                        <select>
-                            <option value="" selected>Seleccione</option>
-                            <option value="1">Alto</option>
-                            <option value="2">Medio</option>
-                            <option value="3">Bajo</option>
-                        </select>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead class="header-table">
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Tipo</th>
-                                <th>Estudiantes</th>
-                                <th>Código</th>
-                            </thead>
-                            <tbody class="body-table">
-                                <tr class="center">
-                                    <td>28/10/2025</td>
-                                    <td>15:05</td>
-                                    <td>tipo</td>
-                                    <td>estudiantes</td>
-                                    <td>U11111111</td>
-                                </tr>
-                                <tr class="center">
-                                    <td>28/10/2025</td>
-                                    <td>15:05</td>
-                                    <td>tipo</td>
-                                    <td>estudiantes</td>
-                                    <td>U11111111</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="tab-content" data-content="sesiones">
-                    <div class="header-content">
-                        <h3>Sesiones</h3>
-                    </div>
-
-                    <div class="filters">
-                        <div class="input-icon">
-                            <input type="text" class="input-search" placeholder="Nombre del estudiante">
-                            <span class="icon-search"></span>
-                        </div>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead class="header-table">
-                                <th>Estudiante</th>
-                                <th>Fecha de Sesión</th>
-                                <th>Estado</th>
-                                <th>Observaciones</th>
-                            </thead>
-                            <tbody class="body-table">
-                                <tr class="center">
-                                    <td>Pablo Sanchez</td>
-                                    <td>28/04/2024</td>
-                                    <td>Realizada</td>
-                                    <td>Depresión</td>
-                                </tr>
-                                <tr class="center">
-                                    <td>Ana Gonzales</td>
-                                    <td>18/10/2024</td>
-                                    <td>Reprogramada</td>
-                                    <td>Paciente no asistio</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="tab-content" data-content="disponibilidad">
-                    <div class="header-content">
-                        <h3>Disponibilidad</h3>
-                    </div>
-
-                    <br>
-
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead class="header-table">
-                                <th>Horas</th>
-                                <th>Lunes</th>
-                                <th>Martes</th>
-                                <th>Miércoles</th>
-                                <th>Jueves</th>
-                                <th>Viernes</th>
-                            </thead>
-                            <tbody class="body-table">
-                                <tr class="center">
-                                    <td>9:00 - 10:00</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>
-                                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M20 6L9 17L4 12" stroke="#26C281" stroke-width="3"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </td>
-                                </tr>
-                                <tr class="center">
-                                    <td>10:00 - 11:00</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr class="center">
-                                    <td>11:00 - 12:00</td>
-                                    <td></td>
-                                    <td>
-                                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M20 6L9 17L4 12" stroke="#26C281" stroke-width="3"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="tab-content" data-content="citas">
-                    <div class="header-content">
-                        <h3>Citas</h3>
-                    </div>
-
-                    <br>
-
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead class="header-table">
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Tipo</th>
-                                <th>Estudiantes</th>
-                                <th>Código</th>
-                            </thead>
-                            <tbody class="body-table">
-                                <tr class="center">
-                                    <td>28/10/2025</td>
-                                    <td>15:05</td>
-                                    <td>tipo</td>
-                                    <td>estudiantes</td>
-                                    <td>U11111111</td>
-                                </tr>
-                                <tr class="center">
-                                    <td>28/10/2025</td>
-                                    <td>15:05</td>
-                                    <td>tipo</td>
-                                    <td>estudiantes</td>
-                                    <td>U11111111</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="estudiantes">👥 Estudiantes</button>
+      <button class="tab" data-tab="citas">📅 Citas</button>
+      <button class="tab" data-tab="calendario">🗓 Calendario</button>
     </div>
 
-    <script src="psicologo.js"></script>
+    <!-- TAB: Estudiantes -->
+    <div id="estudiantes" class="content-section active">
+
+      <!-- Búsqueda general -->
+      <div class="search-bar">
+        <input type="text" id="input-buscar" placeholder="Buscar estudiante por nombre o email..." autocomplete="off">
+        <div id="search-results" class="search-dropdown"></div>
+      </div>
+
+      <!-- Próxima cita -->
+      <div id="proxima-cita-wrap" style="display:none">
+        <h3 class="section-label">🔔 Próxima cita</h3>
+        <div id="proxima-cita-card"></div>
+      </div>
+
+      <!-- Con historial -->
+      <div id="historial-wrap">
+        <h3 class="section-label">📋 Estudiantes atendidos</h3>
+        <div id="lista-historial"><p style="color:#999">Cargando...</p></div>
+      </div>
+
+    </div>
+
+    <!-- TAB: Citas -->
+    <div id="citas" class="content-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <h2 style="color:#1e293b">Mis Citas</h2>
+        <button class="btn btn-primary" id="btn-nueva-cita">+ Nueva disponibilidad</button>
+      </div>
+
+      <div class="citas-filtros">
+        <button class="toggle-btn active" data-filtro="proximas">Próximas</button>
+        <button class="toggle-btn" data-filtro="pasadas">Pasadas</button>
+        <button class="toggle-btn" data-filtro="todas">Todas</button>
+      </div>
+
+      <div id="lista-citas"><p style="color:#999">Cargando...</p></div>
+    </div>
+
+    <!-- TAB: Calendario -->
+    <div id="calendario" class="content-section">
+      <div class="cal-nav">
+        <button class="btn btn-secondary" id="btn-semana-ant">← Anterior</button>
+        <span id="cal-titulo" style="font-weight:700;font-size:16px;color:#1e293b"></span>
+        <button class="btn btn-secondary" id="btn-semana-sig">Siguiente →</button>
+      </div>
+      <div id="cal-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- Popup: Perfil del estudiante -->
+  <div class="popup" id="popup-perfil">
+    <div class="popup-content popup-wide">
+      <span class="close-popup" id="close-popup-perfil">&times;</span>
+      <h3 id="perfil-nombre" style="margin-bottom:4px">—</h3>
+      <p id="perfil-email" style="color:#666;font-size:13px;margin-bottom:16px"></p>
+
+      <div class="tabs-popup">
+        <button class="tab-popup active" data-ptab="obs">Observaciones</button>
+        <button class="tab-popup" data-ptab="citas-hist">Historial de citas</button>
+      </div>
+
+      <div class="content-popup active" id="panel-obs">
+        <button class="btn btn-primary" id="btn-add-obs" style="margin-bottom:12px">+ Agregar observación</button>
+        <div id="form-obs" style="display:none;margin-bottom:12px">
+          <textarea id="textarea-obs" rows="3" placeholder="Escribir observación..." style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;resize:vertical"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" id="btn-guardar-obs">Guardar</button>
+            <button class="btn btn-secondary" id="btn-cancelar-obs">Cancelar</button>
+          </div>
+        </div>
+        <div id="lista-obs"><p style="color:#999">Cargando...</p></div>
+      </div>
+
+      <div class="content-popup" id="panel-citas-hist">
+        <div id="lista-citas-hist"><p style="color:#999">Cargando...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup: Nueva cita -->
+  <div class="popup" id="popup-nueva-cita">
+    <div class="popup-content">
+      <span class="close-popup" id="close-popup-cita">&times;</span>
+      <h3 style="margin-bottom:16px">Nueva disponibilidad</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Inicio</label>
+          <input type="datetime-local" id="input-starts" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Fin</label>
+          <input type="datetime-local" id="input-ends" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Lugar (opcional)</label>
+          <input type="text" id="input-location" placeholder="Ej: Consultorio 3" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <button class="btn btn-primary" id="btn-confirmar-cita">Crear slot</button>
+        <p id="msg-nueva-cita" style="color:#e74c3c;font-size:13px"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup: Cancelar cita reservada -->
+  <div class="popup" id="popup-cancelar">
+    <div class="popup-content">
+      <span class="close-popup" id="close-popup-cancelar">&times;</span>
+      <h3 style="margin-bottom:8px">Cancelar cita</h3>
+      <p id="cancelar-info" style="font-size:13px;color:#555;margin-bottom:12px"></p>
+      <textarea id="textarea-motivo" rows="3" placeholder="Motivo de cancelación (obligatorio)..."
+        style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-cancelar" id="btn-confirmar-cancelar">Confirmar cancelación</button>
+        <button class="btn btn-secondary" id="btn-abortar-cancelar">Volver</button>
+      </div>
+      <p id="msg-cancelar" style="color:#e74c3c;font-size:13px;margin-top:6px"></p>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/psicologo/psicologo.js"></script>
 </body>
-
 </html>

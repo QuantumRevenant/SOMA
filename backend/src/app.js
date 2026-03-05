@@ -7,6 +7,7 @@ import pool from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import docenteRoutes from "./routes/docente.routes.js";
 import estudianteRoutes from "./routes/estudiante.routes.js";
+import psicologoRoutes from "./routes/psicologo.routes.js";
 import { verifyPageAccess } from "./middlewares/auth.middleware.js";
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use(express.static(join(__dirname, "../frontend/public")));
 app.use("/api", authRoutes);
 app.use("/api/docente", docenteRoutes);
 app.use("/api/estudiante", estudianteRoutes);
+app.use("/api/psicologo", psicologoRoutes);
 
 app.get("/health", (req, res) => res.json({ status: "SOMA v0.3 running" }));
 
