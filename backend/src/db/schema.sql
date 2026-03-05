@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS workshops (
   coordinator_id INT NOT NULL,
   title          VARCHAR(255) NOT NULL,
   description    TEXT,
+  expositor      VARCHAR(255) NULL COMMENT 'Nombre libre del expositor, puede ser externo',
   starts_at      DATETIME NOT NULL,
   ends_at        DATETIME NOT NULL,
   capacity       INT NOT NULL DEFAULT 30,
@@ -202,6 +203,28 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_at    TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- ------------------------------------------------------------
+--  CURSOS A CARGO DEL COORDINADOR
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS coordinator_courses (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  coordinator_id   INT NOT NULL,
+  course_id        INT NOT NULL,
+  FOREIGN KEY (coordinator_id) REFERENCES users(id),
+  FOREIGN KEY (course_id)      REFERENCES courses(id),
+  UNIQUE KEY uq_coord_course (coordinator_id, course_id)
+);
+
+-- ------------------------------------------------------------
+--  CONFIGURACIÓN DE ALERTAS POR COORDINADOR
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS coordinator_settings (
+  id                    INT PRIMARY KEY,
+  min_promedio          DECIMAL(4,2) NOT NULL DEFAULT 11.00,
+  min_asistencia_pct    TINYINT      NOT NULL DEFAULT 70,
+  FOREIGN KEY (id) REFERENCES users(id)
 );
 
 -- ============================================================
@@ -352,17 +375,17 @@ INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
   (5, 5, 'confirmada');  -- Luis  en cita psicológica +1 día
 
 -- Talleres futuros
-INSERT IGNORE INTO workshops (coordinator_id, title, description, starts_at, ends_at, capacity, location) VALUES
+INSERT IGNORE INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location) VALUES
   (1, 'Taller de Gestión del Tiempo',
-   'Estrategias para organizar el estudio universitario',
+   'Estrategias para organizar el estudio universitario', 'Carlos Docente',
    DATE_ADD(NOW(), INTERVAL 4 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY) + INTERVAL 3 HOUR,
    30, 'Auditorio Principal'),
   (1, 'Taller de Técnicas de Estudio',
-   'Métodos de aprendizaje activo y mapas mentales',
+   'Métodos de aprendizaje activo y mapas mentales', 'Dra. Patricia Ríos (externa)',
    DATE_ADD(NOW(), INTERVAL 11 DAY), DATE_ADD(NOW(), INTERVAL 11 DAY) + INTERVAL 3 HOUR,
    25, 'Sala de Conferencias B'),
   (1, 'Manejo del Estrés Universitario',
-   'Herramientas para afrontar la presión académica',
+   'Herramientas para afrontar la presión académica', 'María Psicóloga',
    DATE_ADD(NOW(), INTERVAL 18 DAY), DATE_ADD(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR,
    20, 'Auditorio Principal');
 
@@ -370,6 +393,18 @@ INSERT IGNORE INTO workshops (coordinator_id, title, description, starts_at, end
 INSERT IGNORE INTO workshop_enrollments (workshop_id, student_id) VALUES (1, 5);
 
 -- Observaciones
+-- Cursos a cargo de Ana Coordinadora (id=1)
+INSERT IGNORE INTO coordinator_courses (coordinator_id, course_id) VALUES
+  (1, 1),  -- MAT101
+  (1, 2),  -- COM101
+  (1, 3),  -- INF101
+  (1, 4),  -- FIS101
+  (1, 5);  -- QUI101
+
+-- Configuración de alertas de Ana Coordinadora
+INSERT IGNORE INTO coordinator_settings (id, min_promedio, min_asistencia_pct) VALUES
+  (1, 11.00, 70);
+
 INSERT IGNORE INTO observations (author_id, student_id, type, content) VALUES
   (2, 5, 'docente',   'El estudiante muestra buen desempeño pero necesita mejorar puntualidad.'),
   (2, 6, 'docente',   'Ana demuestra excelente comprensión de los temas. Muy participativa.'),
