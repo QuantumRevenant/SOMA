@@ -722,3 +722,11 @@ body {
     .ciclo-selector-wrap { max-width: 100%; }
     .courses-grid-inner { grid-template-columns: 1fr; }
 }
+
+/* ── Botón sin cupo ── */
+.btn-sin-cupo {
+    background: #f3f4f6;
+    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+    cursor: not-allowed;
+}

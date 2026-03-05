@@ -51,21 +51,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // Selector de ciclo (cursos)
-    document.getElementById("select-ciclo").addEventListener("change", e => {
-        const v = e.target.value;
-        if (v) cargarCursos(v);
-    });
+    // Selector de ciclo (cursos) — "" = todos, valor = filtro específico
+    document.getElementById("select-ciclo").addEventListener("change", e =>
+        cargarCursos(e.target.value)
+    );
 
-    // Selector de ciclo (calificaciones)
+    // Selector de ciclo (calificaciones) — siempre tiene valor
     document.getElementById("select-ciclo-grades").addEventListener("change", e => {
         const v = e.target.value;
-        if (!v) return;
-        const lista = todosLosCursos.length
-            ? { cursos: todosLosCursos.filter(c => c.period_label === v) }
-            : null;
-        if (lista) renderGrades(lista.cursos, v);
-        else cargarCursos(v);
+        const lista = todosLosCursos.filter(c => c.period_label === v);
+        renderGrades(lista, v);
     });
 
     // Tabs de servicios
@@ -82,7 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await Promise.all([
         cargarResumen(),
-        cargarCursos("__activo__"),  // señal para usar el activo una vez cargados los periodos
+        cargarCursos(),
         cargarAsesorias(),
         cargarTalleres(),
         cargarCitas(),
@@ -418,7 +413,9 @@ async function cargarAsesorias() {
 
     wrap.innerHTML = data.length === 0
         ? "<p style='color:#999'>No hay asesorías disponibles próximamente.</p>"
-        : data.map(a => `
+        : data.map(a => {
+            const sinCupo = !a.ya_reservado && (a.capacity - a.reservas) <= 0;
+            return `
         <div class="servicio-card">
           <div class="servicio-info">
             <div class="servicio-titulo">Prof. ${a.docente_name}</div>
@@ -426,12 +423,13 @@ async function cargarAsesorias() {
             ${a.location ? `<div class="servicio-lugar">📍 ${a.location}</div>` : ""}
             <div class="servicio-cupo">${cupoLabel(a.reservas, a.capacity)}</div>
           </div>
-          <button class="btn ${a.ya_reservado ? "btn-cancelar" : "btn-primary"} btn-servicio"
+          <button class="btn ${a.ya_reservado ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
             data-id="${a.id}" data-tipo="asesorias" data-hecho="${a.ya_reservado ? 1 : 0}"
-            ${!a.ya_reservado && a.capacity - a.reservas === 0 ? "disabled" : ""}>
-            ${a.ya_reservado ? "Cancelar reserva" : "Reservar"}
+            ${sinCupo ? "disabled" : ""}>
+            ${a.ya_reservado ? "Cancelar reserva" : sinCupo ? "Sin cupo" : "Reservar"}
           </button>
-        </div>`).join("");
+        </div>`;
+        }).join("");
 
     bindServicioBtns("asesorias", cargarAsesorias);
 }
@@ -447,7 +445,9 @@ async function cargarTalleres() {
 
     wrap.innerHTML = data.length === 0
         ? "<p style='color:#999'>No hay talleres disponibles próximamente.</p>"
-        : data.map(t => `
+        : data.map(t => {
+            const sinCupo = !t.ya_inscrito && (t.capacity - t.inscritos) <= 0;
+            return `
         <div class="servicio-card">
           <div class="servicio-info">
             <div class="servicio-titulo">${t.title}</div>
@@ -456,12 +456,13 @@ async function cargarTalleres() {
             ${t.location ? `<div class="servicio-lugar">📍 ${t.location}</div>` : ""}
             <div class="servicio-cupo">${cupoLabel(t.inscritos, t.capacity)}</div>
           </div>
-          <button class="btn ${t.ya_inscrito ? "btn-cancelar" : "btn-primary"} btn-servicio"
+          <button class="btn ${t.ya_inscrito ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
             data-id="${t.id}" data-tipo="talleres" data-hecho="${t.ya_inscrito ? 1 : 0}"
-            ${!t.ya_inscrito && t.capacity - t.inscritos === 0 ? "disabled" : ""}>
-            ${t.ya_inscrito ? "Cancelar inscripción" : "Inscribirme"}
+            ${sinCupo ? "disabled" : ""}>
+            ${t.ya_inscrito ? "Cancelar inscripción" : sinCupo ? "Sin cupo" : "Inscribirme"}
           </button>
-        </div>`).join("");
+        </div>`;
+        }).join("");
 
     bindServicioBtns("talleres", cargarTalleres);
 }
@@ -474,7 +475,9 @@ async function cargarCitas() {
 
     wrap.innerHTML = data.length === 0
         ? "<p style='color:#999'>No hay citas psicológicas disponibles próximamente.</p>"
-        : data.map(c => `
+        : data.map(c => {
+            const sinCupo = !c.ya_reservado && (c.capacity - c.reservas) <= 0;
+            return `
         <div class="servicio-card">
           <div class="servicio-info">
             <div class="servicio-titulo">Psic. ${c.psicologo_name}</div>
@@ -482,12 +485,13 @@ async function cargarCitas() {
             ${c.location ? `<div class="servicio-lugar">📍 ${c.location}</div>` : ""}
             <div class="servicio-cupo">${cupoLabel(c.reservas, c.capacity)}</div>
           </div>
-          <button class="btn ${c.ya_reservado ? "btn-cancelar" : "btn-primary"} btn-servicio"
+          <button class="btn ${c.ya_reservado ? "btn-cancelar" : sinCupo ? "btn-sin-cupo" : "btn-primary"} btn-servicio"
             data-id="${c.id}" data-tipo="citas" data-hecho="${c.ya_reservado ? 1 : 0}"
-            ${!c.ya_reservado && c.capacity - c.reservas === 0 ? "disabled" : ""}>
-            ${c.ya_reservado ? "Cancelar reserva" : "Reservar"}
+            ${sinCupo ? "disabled" : ""}>
+            ${c.ya_reservado ? "Cancelar reserva" : sinCupo ? "Sin cupo" : "Reservar"}
           </button>
-        </div>`).join("");
+        </div>`;
+        }).join("");
 
     bindServicioBtns("citas", cargarCitas);
 }

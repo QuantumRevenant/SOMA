@@ -326,9 +326,12 @@ INSERT IGNORE INTO attendance (enrollment_id, date, status, recorded_by) VALUES
   (6, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'presente', 2);
 
 -- Slots de asesoría (Carlos Docente) — próximas semanas
+-- slot 1: cap 2, lleno (Luis + Ana)
+-- slot 2: cap 3, 1 libre (Luis + Pedro)
+-- slot 3 y 4: cap 5, libres
 INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 2  DAY), DATE_ADD(NOW(), INTERVAL 2  DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 5  DAY), DATE_ADD(NOW(), INTERVAL 5  DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204'),
+  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 2  DAY), DATE_ADD(NOW(), INTERVAL 2  DAY) + INTERVAL 2 HOUR, 2, 'Aula B-204'),
+  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 5  DAY), DATE_ADD(NOW(), INTERVAL 5  DAY) + INTERVAL 2 HOUR, 3, 'Aula B-204'),
   (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 9  DAY), DATE_ADD(NOW(), INTERVAL 9  DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204'),
   (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 12 DAY), DATE_ADD(NOW(), INTERVAL 12 DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204');
 
@@ -340,10 +343,13 @@ INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location
   (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 8  DAY), DATE_ADD(NOW(), INTERVAL 8  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
   (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 10 DAY), DATE_ADD(NOW(), INTERVAL 10 DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3');
 
--- Luis ya reservó la primera asesoría y la primera cita psicológica
+-- Reservas de asesorías
 INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
-  (1, 5, 'confirmada'),  -- Luis en asesoría +2 días
-  (5, 5, 'confirmada');  -- Luis en cita psicológica +1 día
+  (1, 5, 'confirmada'),  -- Luis  en asesoría +2 días (slot cap=2, quedan 1)
+  (1, 6, 'confirmada'),  -- Ana   en asesoría +2 días (slot cap=2, LLENO)
+  (2, 5, 'confirmada'),  -- Luis  en asesoría +5 días (slot cap=3, quedan 1)
+  (2, 7, 'confirmada'),  -- Pedro en asesoría +5 días (slot cap=3, quedan 1)
+  (5, 5, 'confirmada');  -- Luis  en cita psicológica +1 día
 
 -- Talleres futuros
 INSERT IGNORE INTO workshops (coordinator_id, title, description, starts_at, ends_at, capacity, location) VALUES
