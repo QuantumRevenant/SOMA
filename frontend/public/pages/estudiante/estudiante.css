@@ -20,8 +20,9 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
+/* 4. Logo 36px */
 .logo {
-    font-size: 28px;
+    font-size: 36px;
     font-weight: bold;
     letter-spacing: 2px;
     cursor: pointer;
@@ -33,12 +34,13 @@ body {
     gap: 15px;
 }
 
+/* 2. Avatar coral */
 .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: white;
-    color: #2563eb;
+    background: #ff6b6b;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,23 +67,21 @@ body {
 
 /* ── Welcome banner ── */
 .welcome-banner {
-    background: linear-gradient(135deg, #FF6B6B, #FF6B6B);
-    color: #4B3F36;
-    font-weight: bold;
+    background: #ff6b6b;
+    color: white;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 14px;
     margin-bottom: 25px;
     box-shadow: 0 4px 15px rgba(235,50,37,0.3);
 }
 
 .welcome-banner h1 {
-    color: #523D53;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     font-size: 32px;
 }
 
 .welcome-banner p {
-    opacity: 0.95;
+    opacity: 0.85;
     font-size: 16px;
 }
 
@@ -114,34 +114,34 @@ body {
     color: #523D53;
 }
 
-/* ── Tabs ── */
+/* ── Tabs — pills estilo psicólogo/coordinador ── */
 .tabs {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 25px;
-    border-bottom: 2px solid #e5e7eb;
     flex-wrap: wrap;
 }
 
+/* 5. Pills en lugar de underline */
 .tab {
-    padding: 12px 25px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+    padding: 10px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
     color: #6b7280;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .tab.active {
-    color: #000;
-    border-bottom-color: #000;
-    font-weight: 600;
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+    background: #fff5f5;
 }
 
-.tab:hover { color: #000; }
+.tab:hover { border-color: #ff6b6b; color: #ff6b6b; }
 
 /* ── Content sections ── */
 .content-section { display: none; }
@@ -168,7 +168,7 @@ body {
 }
 
 .course-header {
-    background: linear-gradient(135deg, #ff6b6b, #ff6b6b);
+    background: #ff6b6b;
     color: #fff;
     padding: 20px;
     min-height: 110px;
@@ -310,13 +310,13 @@ body {
 .popup-content {
     background: #fff;
     padding: 25px;
-    border-radius: 10px;
+    border-radius: 14px;
     position: relative;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     transform: scale(0.8);
     transition: transform 0.25s ease;
-    width: 480px;
-    max-width: 95vw;
+    width: 100%;
+    max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -325,10 +325,12 @@ body {
 
 .close-popup {
     position: absolute;
-    top: 8px; right: 12px;
-    font-size: 20px;
+    top: 14px; right: 18px;
+    font-size: 22px;
     cursor: pointer;
+    color: #999;
 }
+.close-popup:hover { color: #333; }
 
 .tabs-popup {
     display: flex;
@@ -349,100 +351,13 @@ body {
 }
 
 .tab-popup.active {
-    color: #000;
+    color: #ff6b6b;
     border-bottom-color: #ff6b6b;
     font-weight: 600;
 }
 
 .content-popup { display: none; }
 .content-popup.active { display: block; }
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-
-@media (max-width: 1024px) {
-    .courses-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .header { padding: 12px 16px; }
-    .logo { font-size: 20px; }
-    .user-info > span { display: none; }
-    .user-info { gap: 8px; }
-
-    .container { padding: 12px; }
-
-    .welcome-banner {
-        padding: 20px;
-    }
-    .welcome-banner h1 { font-size: 22px; }
-    .welcome-banner p  { font-size: 14px; }
-
-    .stats-overview {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-
-    .stat-card { padding: 14px; }
-    .stat-card .value { font-size: 22px; }
-
-    .tabs { gap: 4px; }
-    .tab { padding: 10px 14px; font-size: 14px; }
-
-    .courses-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .popup-content {
-        width: 95vw;
-        padding: 16px;
-    }
-
-    .notas th, .notas td {
-        padding: 6px 8px;
-        font-size: 13px;
-    }
-
-    .notifications { padding: 16px; }
-}
-
-@media (max-width: 480px) {
-    .stats-overview { grid-template-columns: 1fr 1fr; }
-    .stat-card .value { font-size: 18px; }
-
-    .welcome-banner h1 { font-size: 18px; }
-
-    .tab { padding: 8px 10px; font-size: 13px; }
-
-    .course-title { font-size: 15px; }
-}
-
-/* ── Toggle activos/historial ── */
-.toggle-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.toggle-btn {
-    padding: 8px 20px;
-    border: 2px solid #ff6b6b;
-    border-radius: 20px;
-    background: white;
-    color: #ff6b6b;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.toggle-btn.active {
-    background: #ff6b6b;
-    color: white;
-}
 
 /* ── Servicios tabs ── */
 .servicios-tabs {
@@ -525,21 +440,11 @@ body {
 
 .btn-cancelar:hover { background: #fbd5d5; }
 
-/* ── Responsive adicional ── */
-@media (max-width: 768px) {
-    .servicio-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .servicio-card .btn {
-        width: 100%;
-        flex: none;
-    }
-
-    .toggle-bar { flex-wrap: wrap; }
-    .servicios-tabs { gap: 6px; }
-    .servicio-btn { padding: 8px 14px; font-size: 13px; }
+.btn-sin-cupo {
+    background: #f3f4f6;
+    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+    cursor: not-allowed;
 }
 
 /* ── Historial ── */
@@ -573,7 +478,7 @@ body {
 .historial-item:last-child { border-bottom: none; }
 .historial-info { flex: 1; }
 
-/* ── Asistencia stats en popup ── */
+/* ── Asistencia stats ── */
 .asist-stat {
     display: flex;
     flex-direction: column;
@@ -599,7 +504,7 @@ body {
 .asist-pct { background: #eff6ff; }
 .asist-pct span { color: #2563eb; }
 
-/* ── Badges estado asistencia ── */
+/* ── Badges ── */
 .badge {
     display: inline-block;
     padding: 2px 8px;
@@ -612,7 +517,6 @@ body {
 .badge-tardanza { background: #fef3c7; color: #92400e; }
 .badge-ausente  { background: #fee2e2; color: #991b1b; }
 
-/* ── Servicio pasado ── */
 .servicio-pasado {
     opacity: 0.7;
     background: #f9fafb;
@@ -629,15 +533,7 @@ body {
     margin-bottom: 4px;
 }
 
-/* ── Responsive adicional ── */
-@media (max-width: 768px) {
-    .historial-item { flex-direction: column; align-items: flex-start; }
-    .historial-item > div:last-child { text-align: left; }
-    .asist-stat { min-width: 60px; padding: 6px 10px; }
-    .asist-stat span { font-size: 18px; }
-}
-
-/* ── Selector de ciclo estilizado ── */
+/* ── Selector ciclo ── */
 .ciclo-selector-wrap {
     display: flex;
     align-items: center;
@@ -679,10 +575,8 @@ body {
 
 .ciclo-select:focus { outline: none; }
 
-/* ── Agrupación por periodo en cursos ── */
-.periodo-group {
-    margin-bottom: 24px;
-}
+/* ── Agrupación por periodo ── */
+.periodo-group { margin-bottom: 24px; }
 
 .periodo-group-titulo {
     font-size: 15px;
@@ -710,36 +604,89 @@ body {
     gap: 16px;
 }
 
+/* ── Toggle bar ── */
+.toggle-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.toggle-btn {
+    padding: 8px 20px;
+    border: 2px solid #ff6b6b;
+    border-radius: 20px;
+    background: white;
+    color: #ff6b6b;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: #ff6b6b;
+    color: white;
+}
+
+/* ── Popup confirmación ── */
+.popup-confirm-content {
+    max-width: 380px;
+    text-align: center;
+    padding: 32px 28px;
+}
+
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 1024px) {
     .courses-grid-inner { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .header { padding: 12px 16px; }
+    .logo { font-size: 28px; }
+    .user-info > span { display: none; }
+    .user-info { gap: 8px; }
+    .container { padding: 12px; }
+    .welcome-banner { padding: 20px; }
+    .welcome-banner h1 { font-size: 22px; }
+    .welcome-banner p  { font-size: 14px; }
+    .stats-overview { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-card .value { font-size: 22px; }
+    .tabs { gap: 4px; }
+    .tab { padding: 8px 12px; font-size: 13px; }
+    .courses-grid-inner { grid-template-columns: 1fr; }
+    .popup-content { width: 95vw; padding: 16px; }
+    .notas th, .notas td { padding: 6px 8px; font-size: 13px; }
+    .notifications { padding: 16px; }
+    .servicio-card { flex-direction: column; align-items: flex-start; }
+    .servicio-card .btn { width: 100%; flex: none; }
+    .toggle-bar { flex-wrap: wrap; }
+    .servicios-tabs { gap: 6px; }
+    .servicio-btn { padding: 8px 14px; font-size: 13px; }
+    .historial-item { flex-direction: column; align-items: flex-start; }
+    .historial-item > div:last-child { text-align: left; }
+    .asist-stat { min-width: 60px; padding: 6px 10px; }
+    .asist-stat span { font-size: 18px; }
+    .ciclo-selector-wrap { max-width: 100%; }
 }
 
 @media (max-width: 600px) {
     .courses-grid-inner { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 768px) {
-    .ciclo-selector-wrap { max-width: 100%; }
-    .courses-grid-inner { grid-template-columns: 1fr; }
-}
-
-/* ── Botón sin cupo ── */
-.btn-sin-cupo {
-    background: #f3f4f6;
-    color: #9ca3af;
-    border: 1px solid #e5e7eb;
-    cursor: not-allowed;
-}
-
-/* ── Popup confirmación ── */
-.popup-confirm-content {
-  max-width: 380px;
-  text-align: center;
-  padding: 32px 28px;
-}
-
-.confirm-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-  line-height: 1;
+@media (max-width: 480px) {
+    .stats-overview { grid-template-columns: 1fr 1fr; }
+    .stat-card .value { font-size: 18px; }
+    .welcome-banner h1 { font-size: 18px; }
+    .tab { padding: 8px 10px; font-size: 13px; }
+    .course-title { font-size: 15px; }
 }

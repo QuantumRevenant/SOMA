@@ -13,8 +13,8 @@ function fmt(dt) {
         hour: "2-digit", minute: "2-digit"
     });
 }
+
 function fmtDate(d) {
-    // d puede venir como "2025-08-05" o como objeto Date de MariaDB
     const str = typeof d === "string" ? d : d.toISOString().split("T")[0];
     const [y, m, day] = str.split("-");
     return `${day}/${m}/${y}`;
@@ -26,8 +26,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!payload) return;
 
     document.getElementById("user-name").textContent = payload.full_name;
-    document.getElementById("card-name").textContent = payload.full_name;
-    document.getElementById("card-email").textContent = payload.email;
     document.getElementById("user-avatar").textContent =
         payload.full_name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
@@ -36,23 +34,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.replace("/");
     });
 
-    // Tabs
-    document.addEventListener("click", (e) => {
-        const tab = e.target.closest(".items ul li");
-        if (!tab) return;
-        document.querySelectorAll(".items ul li").forEach(li =>
-            li.classList.toggle("active", li === tab));
-        document.querySelectorAll(".tab-content").forEach(s =>
-            s.classList.toggle("show", s.dataset.content === tab.dataset.tab));
+    // Tabs — ahora buttons.tab con data-tab / sections con id
+    document.querySelectorAll(".tab[data-tab]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab[data-tab]").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".content-section").forEach(s => s.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.tab).classList.add("active");
+        });
     });
 
-    await cargarSecciones();
+    initPopupConfirm();
+    initPopupNuevaAsesoria();
+    initPopupEditarAsesoria();
     initAsistencia();
     initNotas();
     initObservaciones();
-    initAsesorias();
-    initPopupEditarAsesoria();
+
+    await cargarSecciones();
+    cargarAsesorias();
 });
+
+// ── Popup de confirmación ─────────────────────────────────────────────────────
+let _confirmFn = null;
+
+function initPopupConfirm() {
+    document.getElementById("btn-confirm-ok").addEventListener("click", () => {
+        const fn = _confirmFn;
+        cerrarConfirm();
+        if (fn) fn();
+    });
+    document.getElementById("btn-confirm-cancel").addEventListener("click", cerrarConfirm);
+    document.getElementById("popup-confirm").addEventListener("click", e => {
+        if (e.target === document.getElementById("popup-confirm")) cerrarConfirm();
+    });
+}
+
+function cerrarConfirm() {
+    document.getElementById("popup-confirm").classList.remove("active");
+    _confirmFn = null;
+}
+
+function pedirConfirm({ titulo, msg, icono = "❓", labelOk = "Confirmar", labelCancel = "Volver", esDestructivo = false, onConfirm }) {
+    document.getElementById("confirm-titulo").textContent = titulo;
+    document.getElementById("confirm-msg").textContent = msg;
+    document.getElementById("confirm-icon").textContent = icono;
+    document.getElementById("btn-confirm-cancel").textContent = labelCancel;
+    const btnOk = document.getElementById("btn-confirm-ok");
+    btnOk.textContent = labelOk;
+    btnOk.className = `btn ${esDestructivo ? "btn-cancelar" : "btn-primary"}`;
+    _confirmFn = onConfirm;
+    document.getElementById("popup-confirm").classList.add("active");
+}
 
 // ── Secciones / Programaciones ────────────────────────────────────────────────
 async function cargarSecciones(periodId = "") {
@@ -72,10 +105,10 @@ async function cargarSecciones(periodId = "") {
         data.secciones.length === 0
             ? `<tr><td colspan="5">No hay secciones para este periodo.</td></tr>`
             : data.secciones.map(s => `
-          <tr>
-            <td>${s.code}</td><td>${s.course_name}</td>
-            <td>${s.section}</td><td>${s.period_label}</td><td>${s.total_alumnos}</td>
-          </tr>`).join("");
+                <tr>
+                    <td>${s.code}</td><td>${s.course_name}</td>
+                    <td>${s.section}</td><td>${s.period_label}</td><td>${s.total_alumnos}</td>
+                </tr>`).join("");
 
     poblarSelectSecciones("select-seccion-asist");
     poblarSelectSecciones("select-seccion-notas");
@@ -109,19 +142,19 @@ function initAsistencia() {
         selAlumno.disabled = false;
         renderAsistencia();
     });
-
     selVista.addEventListener("change", renderAsistencia);
     inputFecha.addEventListener("change", renderAsistencia);
     selAlumno.addEventListener("change", renderAsistencia);
 
-    // Popup registrar
     const popup = document.getElementById("popup-asistencia");
-    const closeBtn = document.getElementById("close-popup");
+    const closeBtn = document.getElementById("close-popup-asistencia");
 
-    document.addEventListener("click", async (e) => {
-        if (!e.target.matches("#btn-abrir-registro")) return;
+    document.getElementById("btn-abrir-registro").addEventListener("click", async () => {
         const seccionId = selSeccion.value;
-        if (!seccionId) { alert("Seleccione una sección primero."); return; }
+        if (!seccionId) {
+            pedirConfirm({ titulo: "Aviso", msg: "Seleccione una sección primero.", icono: "⚠️", labelOk: "Entendido", onConfirm: () => { } });
+            return;
+        }
         const today = new Date().toISOString().split("T")[0];
         const [alumnos, asistHoy] = await Promise.all([
             apiFetch(`${API}/secciones/${seccionId}/alumnos`),
@@ -133,17 +166,17 @@ function initAsistencia() {
         document.getElementById("popup-fecha").textContent = fmtDate(today);
         document.getElementById("tbody-popup-asistencia").innerHTML =
             alumnos.map(a => `
-        <tr class="center">
-          <td>${a.full_name}</td>
-          <td>
-            <select data-enrollment="${a.enrollment_id}">
-              <option value="">—</option>
-              <option value="presente" ${asistMap[a.enrollment_id] === "presente" ? "selected" : ""}>✅ Presente</option>
-              <option value="ausente"  ${asistMap[a.enrollment_id] === "ausente" ? "selected" : ""}>❌ Ausente</option>
-              <option value="tardanza" ${asistMap[a.enrollment_id] === "tardanza" ? "selected" : ""}>⏰ Tardanza</option>
-            </select>
-          </td>
-        </tr>`).join("");
+                <tr>
+                    <td>${a.full_name}</td>
+                    <td>
+                        <select data-enrollment="${a.enrollment_id}">
+                            <option value="">—</option>
+                            <option value="presente" ${asistMap[a.enrollment_id] === "presente" ? "selected" : ""}>✅ Presente</option>
+                            <option value="ausente"  ${asistMap[a.enrollment_id] === "ausente" ? "selected" : ""}>❌ Ausente</option>
+                            <option value="tardanza" ${asistMap[a.enrollment_id] === "tardanza" ? "selected" : ""}>⏰ Tardanza</option>
+                        </select>
+                    </td>
+                </tr>`).join("");
         popup.classList.add("active");
     });
 
@@ -156,7 +189,10 @@ function initAsistencia() {
         const registros = [...document.querySelectorAll("#tbody-popup-asistencia select")]
             .filter(s => s.value !== "")
             .map(s => ({ enrollment_id: s.dataset.enrollment, status: s.value }));
-        if (registros.length === 0) { alert("Seleccione al menos un estado."); return; }
+        if (registros.length === 0) {
+            pedirConfirm({ titulo: "Aviso", msg: "Seleccione al menos un estado.", icono: "⚠️", labelOk: "Entendido", onConfirm: () => { } });
+            return;
+        }
         const res = await apiFetch(`${API}/asistencia`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -166,7 +202,7 @@ function initAsistencia() {
             popup.classList.remove("active");
             renderAsistencia();
         } else {
-            alert(res?.error ?? "Error al guardar.");
+            pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error al guardar.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
         }
     });
 }
@@ -175,9 +211,7 @@ async function renderAsistencia() {
     const seccionId = document.getElementById("select-seccion-asist").value;
     const vista = document.getElementById("select-vista-asist").value;
     const fecha = document.getElementById("input-fecha-asist").value;
-    const alumnoId = document.getElementById("select-alumno-asist").value;
     const wrap = document.getElementById("tabla-asistencia-wrap");
-
     if (!seccionId) { wrap.innerHTML = ""; return; }
 
     const url = fecha
@@ -186,59 +220,34 @@ async function renderAsistencia() {
     const rows = await apiFetch(url);
     if (!rows) return;
 
-    const filtered = alumnoId
-        ? rows.filter(r => {
-            // filtra por nombre si no tenemos student_id en la respuesta
-            const alumno = seccionesCache; // usamos el select
-            return true; // el filtro real es por alumno en el select
-        })
-        : rows;
-
-    // Vista por fecha (resumen del día)
     if (vista === "fecha") {
-        // Agrupar por fecha
         const byDate = {};
-        rows.forEach(r => {
-            if (!byDate[r.date]) byDate[r.date] = [];
-            byDate[r.date].push(r);
-        });
+        rows.forEach(r => { if (!byDate[r.date]) byDate[r.date] = []; byDate[r.date].push(r); });
         wrap.innerHTML = Object.entries(byDate).map(([date, registros]) => `
-      <div style="margin-bottom:16px">
-        <strong>${fmtDate(date)}</strong>
-        <table class="table" style="margin-top:8px">
-          <thead class="header-table"><tr><th>Alumno</th><th>Estado</th></tr></thead>
-          <tbody class="body-table">
-            ${registros.map(r => `
-              <tr class="center">
-                <td>${r.full_name}</td>
-                <td>${estadoBadge(r.status)}</td>
-              </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>`).join("") || "<p>No hay registros.</p>";
+            <div style="margin-bottom:16px">
+                <strong>${fmtDate(date)}</strong>
+                <table class="table" style="margin-top:8px">
+                    <thead class="header-table"><tr><th>Alumno</th><th>Estado</th></tr></thead>
+                    <tbody class="body-table">
+                        ${registros.map(r => `<tr><td>${r.full_name}</td><td>${estadoBadge(r.status)}</td></tr>`).join("")}
+                    </tbody>
+                </table>
+            </div>`).join("") || "<p style='color:#999'>No hay registros.</p>";
         return;
     }
 
-    // Vista por alumno (historial individual)
     const byAlumno = {};
-    rows.forEach(r => {
-        if (!byAlumno[r.full_name]) byAlumno[r.full_name] = [];
-        byAlumno[r.full_name].push(r);
-    });
+    rows.forEach(r => { if (!byAlumno[r.full_name]) byAlumno[r.full_name] = []; byAlumno[r.full_name].push(r); });
     wrap.innerHTML = Object.entries(byAlumno).map(([nombre, registros]) => `
-    <div style="margin-bottom:16px">
-      <strong>${nombre}</strong>
-      <table class="table" style="margin-top:8px">
-        <thead class="header-table"><tr><th>Fecha</th><th>Estado</th></tr></thead>
-        <tbody class="body-table">
-          ${registros.map(r => `
-            <tr class="center">
-              <td>${fmtDate(r.date)}</td>
-              <td>${estadoBadge(r.status)}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-    </div>`).join("") || "<p>No hay registros.</p>";
+        <div style="margin-bottom:16px">
+            <strong>${nombre}</strong>
+            <table class="table" style="margin-top:8px">
+                <thead class="header-table"><tr><th>Fecha</th><th>Estado</th></tr></thead>
+                <tbody class="body-table">
+                    ${registros.map(r => `<tr><td>${fmtDate(r.date)}</td><td>${estadoBadge(r.status)}</td></tr>`).join("")}
+                </tbody>
+            </table>
+        </div>`).join("") || "<p style='color:#999'>No hay registros.</p>";
 }
 
 function estadoBadge(status) {
@@ -255,43 +264,40 @@ function initNotas() {
 async function cargarNotas(seccionId) {
     const wrap = document.getElementById("notas-wrap");
     if (!seccionId) { wrap.style.display = "none"; return; }
-
     const [data, alumnos, plantilla] = await Promise.all([
         apiFetch(`${API}/secciones/${seccionId}/evaluaciones`),
         apiFetch(`${API}/secciones/${seccionId}/alumnos`),
         apiFetch(`${API}/secciones/${seccionId}/plantilla`),
     ]);
     if (!data || !alumnos) return;
-
     const { evaluaciones, notas } = data;
     const sumaActual = evaluaciones.reduce((acc, e) => acc + parseFloat(e.weight), 0);
 
-    // Panel gestión evaluaciones
     document.getElementById("panel-evaluaciones").innerHTML = `
-    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <strong>Evaluaciones (total peso: <span id="suma-pesos">${sumaActual}</span>%)</strong>
-      <button class="btn btn-secondary" id="btn-from-plantilla" style="flex:none;padding:6px 10px"
-        ${plantilla.length === 0 ? "disabled title='Sin plantilla definida'" : ""}>
-        + Desde plantilla
-      </button>
-      <button class="btn btn-primary" id="btn-nueva-eval" style="flex:none;padding:6px 10px">+ Nueva</button>
-    </div>
-    <div id="lista-evaluaciones">
-      ${evaluaciones.map(ev => rowEvaluacion(ev)).join("")}
-    </div>
-    <div id="form-nueva-eval" style="display:none;margin-top:12px;display:none">
-      <input id="new-eval-name" placeholder="Nombre evaluación" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-right:8px">
-      <input id="new-eval-weight" type="number" min="1" max="100" placeholder="Peso %" style="width:80px;padding:6px;border:1px solid #ccc;border-radius:4px;margin-right:8px">
-      <button class="btn btn-primary" id="btn-confirmar-eval" style="padding:6px 12px">Guardar</button>
-      <button class="btn btn-secondary" id="btn-cancelar-eval" style="padding:6px 12px">Cancelar</button>
-    </div>
-    <div id="select-plantilla-wrap" style="display:none;margin-top:8px">
-      <select id="select-plantilla">
-        <option value="">Seleccione evaluación de plantilla</option>
-        ${plantilla.map(p => `<option value="${p.id}" data-name="${p.name}" data-weight="${p.weight}">${p.name} (${p.weight}%)</option>`).join("")}
-      </select>
-      <button class="btn btn-primary" id="btn-confirmar-plantilla" style="padding:6px 12px;margin-top:6px">Agregar</button>
-    </div>`;
+        <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <strong>Evaluaciones (total peso: <span id="suma-pesos">${sumaActual}</span>%)</strong>
+            <button class="btn btn-secondary" id="btn-from-plantilla" style="flex:none;padding:6px 10px"
+                ${plantilla.length === 0 ? "disabled title='Sin plantilla definida'" : ""}>
+                + Desde plantilla
+            </button>
+            <button class="btn btn-primary" id="btn-nueva-eval" style="flex:none;padding:6px 10px">+ Nueva</button>
+        </div>
+        <div id="lista-evaluaciones">
+            ${evaluaciones.map(ev => rowEvaluacion(ev)).join("")}
+        </div>
+        <div id="form-nueva-eval" style="display:none;margin-top:12px">
+            <input id="new-eval-name" placeholder="Nombre evaluación" style="padding:6px;border:1px solid #ccc;border-radius:4px;margin-right:8px">
+            <input id="new-eval-weight" type="number" min="1" max="100" placeholder="Peso %" style="width:80px;padding:6px;border:1px solid #ccc;border-radius:4px;margin-right:8px">
+            <button class="btn btn-primary" id="btn-confirmar-eval" style="padding:6px 12px">Guardar</button>
+            <button class="btn btn-secondary" id="btn-cancelar-eval" style="padding:6px 12px">Cancelar</button>
+        </div>
+        <div id="select-plantilla-wrap" style="display:none;margin-top:8px">
+            <select id="select-plantilla">
+                <option value="">Seleccione evaluación de plantilla</option>
+                ${plantilla.map(p => `<option value="${p.id}" data-name="${p.name}" data-weight="${p.weight}">${p.name} (${p.weight}%)</option>`).join("")}
+            </select>
+            <button class="btn btn-primary" id="btn-confirmar-plantilla" style="padding:6px 12px;margin-top:6px">Agregar</button>
+        </div>`;
 
     wrap.style.display = "block";
     bindEvaluacionEvents(seccionId);
@@ -300,16 +306,15 @@ async function cargarNotas(seccionId) {
 
 function rowEvaluacion(ev) {
     return `
-    <div class="eval-row" data-id="${ev.id}" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span class="eval-name" style="flex:1">${ev.name}</span>
-      <span class="eval-weight" style="width:60px;text-align:right">${ev.weight}%</span>
-      <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">✏️</button>
-      <button class="btn btn-secondary btn-del-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">🗑️</button>
+    <div class="eval-row" data-id="${ev.id}">
+        <span class="eval-name" style="flex:1">${ev.name}</span>
+        <span class="eval-weight" style="width:60px;text-align:right">${ev.weight}%</span>
+        <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">✏️</button>
+        <button class="btn btn-secondary btn-del-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">🗑️</button>
     </div>`;
 }
 
 function bindEvaluacionEvents(seccionId) {
-    // Nueva evaluación manual
     document.getElementById("btn-nueva-eval").addEventListener("click", () => {
         document.getElementById("form-nueva-eval").style.display = "flex";
         document.getElementById("select-plantilla-wrap").style.display = "none";
@@ -320,17 +325,18 @@ function bindEvaluacionEvents(seccionId) {
     document.getElementById("btn-confirmar-eval").addEventListener("click", async () => {
         const name = document.getElementById("new-eval-name").value.trim();
         const weight = document.getElementById("new-eval-weight").value;
-        if (!name || !weight) { alert("Complete nombre y peso."); return; }
+        if (!name || !weight) {
+            pedirConfirm({ titulo: "Aviso", msg: "Complete nombre y peso.", icono: "⚠️", labelOk: "Entendido", onConfirm: () => { } });
+            return;
+        }
         const res = await apiFetch(`${API}/secciones/${seccionId}/evaluaciones`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, weight: parseFloat(weight) }),
         });
         if (res?.ok) cargarNotas(seccionId);
-        else alert(res?.error ?? "Error.");
+        else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
     });
-
-    // Desde plantilla
     document.getElementById("btn-from-plantilla")?.addEventListener("click", () => {
         document.getElementById("select-plantilla-wrap").style.display = "block";
         document.getElementById("form-nueva-eval").style.display = "none";
@@ -338,33 +344,36 @@ function bindEvaluacionEvents(seccionId) {
     document.getElementById("btn-confirmar-plantilla")?.addEventListener("click", async () => {
         const sel = document.getElementById("select-plantilla");
         const opt = sel.selectedOptions[0];
-        if (!opt?.value) { alert("Seleccione una evaluación."); return; }
+        if (!opt?.value) {
+            pedirConfirm({ titulo: "Aviso", msg: "Seleccione una evaluación.", icono: "⚠️", labelOk: "Entendido", onConfirm: () => { } });
+            return;
+        }
         const res = await apiFetch(`${API}/secciones/${seccionId}/evaluaciones`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                name: opt.dataset.name,
-                weight: parseFloat(opt.dataset.weight),
-                template_id: parseInt(opt.value),
-            }),
+            body: JSON.stringify({ name: opt.dataset.name, weight: parseFloat(opt.dataset.weight), template_id: parseInt(opt.value) }),
         });
         if (res?.ok) cargarNotas(seccionId);
-        else alert(res?.error ?? "Error.");
+        else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
     });
-
-    // Editar / eliminar evaluaciones
     document.getElementById("lista-evaluaciones").addEventListener("click", async (e) => {
         const id = e.target.dataset.id;
         if (!id) return;
-
         if (e.target.matches(".btn-del-eval")) {
-            if (!confirm("¿Eliminar evaluación y sus notas?")) return;
-            const res = await apiFetch(`${API}/evaluaciones/${id}`, { method: "DELETE" });
-            if (res?.ok) cargarNotas(seccionId);
-            else alert(res?.error ?? "Error.");
+            pedirConfirm({
+                titulo: "Eliminar evaluación",
+                msg: "¿Eliminar esta evaluación y todas sus notas? Esta acción no se puede deshacer.",
+                icono: "🗑️",
+                labelOk: "Sí, eliminar",
+                esDestructivo: true,
+                onConfirm: async () => {
+                    const res = await apiFetch(`${API}/evaluaciones/${id}`, { method: "DELETE" });
+                    if (res?.ok) cargarNotas(seccionId);
+                    else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+                },
+            });
             return;
         }
-
         if (e.target.matches(".btn-edit-eval")) {
             const row = e.target.closest(".eval-row");
             const name = row.querySelector(".eval-name").textContent;
@@ -378,7 +387,7 @@ function bindEvaluacionEvents(seccionId) {
                 body: JSON.stringify({ name: newName, weight: newWeight }),
             });
             if (res?.ok) cargarNotas(seccionId);
-            else alert(res?.error ?? "Error.");
+            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
         }
     });
 }
@@ -389,20 +398,18 @@ function renderTablaNotas(evaluaciones, alumnos, notas) {
         if (!notaMap[n.enrollment_id]) notaMap[n.enrollment_id] = {};
         notaMap[n.enrollment_id][n.evaluation_id] = n.score;
     });
-
     document.getElementById("thead-notas").innerHTML =
         `<tr><th>Alumno</th>${evaluaciones.map(ev =>
             `<th>${ev.name}<br><small>${ev.weight}%</small></th>`).join("")}</tr>`;
-
     document.getElementById("tbody-notas").innerHTML = alumnos.map(a => `
-    <tr>
-      <td>${a.full_name}</td>
-      ${evaluaciones.map(ev => {
+        <tr>
+            <td>${a.full_name}</td>
+            ${evaluaciones.map(ev => {
         const score = notaMap[a.enrollment_id]?.[ev.id] ?? "";
         return `<td><input type="number" min="0" max="20" step="0.5" value="${score}"
-          style="width:60px" data-enrollment="${a.enrollment_id}" data-evaluation="${ev.id}"></td>`;
+                    style="width:60px" data-enrollment="${a.enrollment_id}" data-evaluation="${ev.id}"></td>`;
     }).join("")}
-    </tr>`).join("");
+        </tr>`).join("");
 }
 
 document.addEventListener("click", async (e) => {
@@ -419,7 +426,7 @@ document.addEventListener("click", async (e) => {
             }),
         })
     ));
-    alert("Notas guardadas.");
+    pedirConfirm({ titulo: "Listo", msg: "Notas guardadas correctamente.", icono: "✅", labelOk: "Cerrar", onConfirm: () => { } });
 });
 
 // ── Observaciones ─────────────────────────────────────────────────────────────
@@ -447,9 +454,7 @@ function initObservaciones() {
         const student_id = selAlumno.value;
         const content = document.getElementById("textarea-obs").value.trim();
         const msg = document.getElementById("msg-obs");
-        if (!student_id || !content) {
-            msg.textContent = "Seleccione alumno y escriba la observación."; return;
-        }
+        if (!student_id || !content) { msg.textContent = "Seleccione alumno y escriba la observación."; return; }
         const res = await apiFetch(`${API}/observaciones`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -475,38 +480,35 @@ async function cargarObservaciones(studentId) {
         : data.docente.map(o => {
             const esMia = o.author_id === data.myId;
             return `
-        <div class="obs-item" data-id="${o.id}" style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-            <strong>${o.author_name}</strong>
-            <small style="color:#999">${fmt(o.created_at)}${o.updated_at ? " (editada)" : ""}</small>
-          </div>
-          <p class="obs-text">${o.content}</p>
-          ${esMia ? `
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn btn-secondary btn-edit-obs" data-id="${o.id}"
-              style="padding:4px 10px;font-size:12px">✏️ Editar</button>
-            <button class="btn btn-secondary btn-del-obs" data-id="${o.id}"
-              style="padding:4px 10px;font-size:12px;background:#fde8e8">🗑️ Eliminar</button>
-          </div>` : ""}
-        </div>`;
+            <div class="obs-item" data-id="${o.id}">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <strong>${o.author_name}</strong>
+                    <small style="color:#999">${fmt(o.created_at)}${o.updated_at ? " (editada)" : ""}</small>
+                </div>
+                <p class="obs-text">${o.content}</p>
+                ${esMia ? `
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <button class="btn btn-secondary btn-edit-obs" data-id="${o.id}" style="padding:4px 10px;font-size:12px">✏️ Editar</button>
+                    <button class="btn btn-cancelar btn-del-obs" data-id="${o.id}" style="padding:4px 10px;font-size:12px">🗑️ Eliminar</button>
+                </div>` : ""}
+            </div>`;
         }).join("");
 
     const psicHtml = data.psicologo.length === 0
         ? "<p style='color:#999'>Sin observaciones del psicólogo.</p>"
         : data.psicologo.map(o => `
-        <div style="border:1px solid #f3c6c6;border-radius:8px;padding:12px;margin-bottom:8px;background:#fff9f9">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-            <strong>${o.author_name}</strong>
-            <small style="color:#999">${fmt(o.created_at)}</small>
-          </div>
-          <p>${o.content}</p>
-        </div>`).join("");
+            <div style="border:1px solid #f3c6c6;border-radius:8px;padding:12px;margin-bottom:8px;background:#fff9f9">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <strong>${o.author_name}</strong>
+                    <small style="color:#999">${fmt(o.created_at)}</small>
+                </div>
+                <p>${o.content}</p>
+            </div>`).join("");
 
     wrap.innerHTML = `
-    <h4 style="margin:16px 0 8px">Observaciones de Docentes</h4>${docenteHtml}
-    <h4 style="margin:16px 0 8px;color:#c0392b">Observaciones Psicológicas</h4>${psicHtml}`;
+        <h4 style="margin:0 0 10px;color:#1e293b">Observaciones de Docentes</h4>${docenteHtml}
+        <h4 style="margin:16px 0 10px;color:#c0392b">Observaciones Psicológicas</h4>${psicHtml}`;
 
-    // Bind editar
     wrap.querySelectorAll(".btn-edit-obs").forEach(btn => {
         btn.addEventListener("click", async () => {
             const id = btn.dataset.id;
@@ -520,46 +522,60 @@ async function cargarObservaciones(studentId) {
                 body: JSON.stringify({ content: nuevo }),
             });
             if (res?.ok) cargarObservaciones(studentId);
-            else alert(res?.error ?? "Error.");
+            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
         });
     });
 
-    // Bind eliminar
     wrap.querySelectorAll(".btn-del-obs").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            if (!confirm("¿Eliminar esta observación?")) return;
-            const res = await apiFetch(`${API}/observaciones/${btn.dataset.id}`, { method: "DELETE" });
-            if (res?.ok) cargarObservaciones(studentId);
-            else alert(res?.error ?? "Error.");
+        btn.addEventListener("click", () => {
+            pedirConfirm({
+                titulo: "Eliminar observación",
+                msg: "¿Seguro que quieres eliminar esta observación?",
+                icono: "🗑️",
+                labelOk: "Sí, eliminar",
+                esDestructivo: true,
+                onConfirm: async () => {
+                    const res = await apiFetch(`${API}/observaciones/${btn.dataset.id}`, { method: "DELETE" });
+                    if (res?.ok) cargarObservaciones(studentId);
+                },
+            });
         });
     });
 }
 
 // ── Asesorías ─────────────────────────────────────────────────────────────────
-function initAsesorias() {
-    cargarAsesorias();
-
+function initPopupNuevaAsesoria() {
+    const popup = document.getElementById("popup-nueva-asesoria");
     document.getElementById("btn-nueva-asesoria").addEventListener("click", () => {
-        document.getElementById("form-asesoria").style.display =
-            document.getElementById("form-asesoria").style.display === "none" ? "block" : "none";
+        document.getElementById("msg-nueva-asesoria").textContent = "";
+        popup.classList.add("active");
     });
-
+    document.getElementById("close-popup-nueva-asesoria").addEventListener("click",
+        () => popup.classList.remove("active"));
+    popup.addEventListener("click", e => {
+        if (e.target === popup) popup.classList.remove("active");
+    });
     document.getElementById("btn-guardar-asesoria").addEventListener("click", async () => {
         const starts_at = document.getElementById("asesoria-inicio").value;
         const ends_at = document.getElementById("asesoria-fin").value;
         const capacity = document.getElementById("asesoria-cupo").value;
         const location = document.getElementById("asesoria-lugar").value;
-        if (!starts_at || !ends_at) { alert("Complete fecha de inicio y fin."); return; }
+        const msg = document.getElementById("msg-nueva-asesoria");
+        if (!starts_at || !ends_at) { msg.textContent = "Complete fecha de inicio y fin."; return; }
+        if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
         const res = await apiFetch(`${API}/asesorias`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ starts_at, ends_at, capacity: parseInt(capacity) || 5, location }),
         });
         if (res?.ok) {
-            document.getElementById("form-asesoria").style.display = "none";
+            popup.classList.remove("active");
+            document.getElementById("asesoria-inicio").value = "";
+            document.getElementById("asesoria-fin").value = "";
+            document.getElementById("asesoria-lugar").value = "";
             cargarAsesorias();
         } else {
-            alert(res?.error ?? "Error.");
+            msg.textContent = res?.error ?? "Error.";
         }
     });
 }
@@ -571,34 +587,39 @@ async function cargarAsesorias() {
     wrap.innerHTML = rows.length === 0
         ? "<p style='color:#999'>No hay asesorías creadas.</p>"
         : rows.map(s => `
-        <div class="course-card" style="margin-bottom:12px">
-          <div class="course-header">
-            <div class="course-code">${fmt(s.starts_at)} — ${fmt(s.ends_at)}</div>
-            <div class="course-title">${s.location ?? "Sin ubicación"}</div>
-          </div>
-          <div class="course-body">
-            <p>Cupo: ${s.reservas}/${s.capacity}${s.reservas > 0 ? ' · <span style="color:#f39c12;font-size:12px">⚠️ Con reservas</span>' : ""}</p>
-            <div class="course-actions" style="margin-top:8px;display:flex;gap:8px">
-              <button class="btn btn-secondary btn-edit-asesoria"
-                data-id="${s.id}"
-                data-starts="${s.starts_at}"
-                data-ends="${s.ends_at}"
-                data-capacity="${s.capacity}"
-                data-location="${s.location ?? ""}"
-                data-reservas="${s.reservas}"
-                style="max-width:120px">✏️ Editar</button>
-              <button class="btn btn-secondary btn-del-asesoria" data-id="${s.id}"
-                style="max-width:120px">🗑️ Eliminar</button>
-            </div>
-          </div>
-        </div>`).join("");
+            <div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                <div>
+                    <div style="font-weight:700;font-size:14px;color:#1e293b">📅 ${fmt(s.starts_at)} — ${fmt(s.ends_at)}</div>
+                    ${s.location ? `<div style="font-size:13px;color:#555;margin-top:2px">📍 ${s.location}</div>` : ""}
+                    <div style="font-size:13px;color:#555;margin-top:4px">
+                        Cupo: ${s.reservas}/${s.capacity}
+                        ${s.reservas > 0 ? '<span style="color:#f39c12;font-size:12px;margin-left:6px">⚠️ Con reservas</span>' : ""}
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-shrink:0">
+                    <button class="btn btn-secondary btn-edit-asesoria"
+                        data-id="${s.id}" data-starts="${s.starts_at}" data-ends="${s.ends_at}"
+                        data-capacity="${s.capacity}" data-location="${s.location ?? ""}"
+                        data-reservas="${s.reservas}" style="font-size:13px">✏️ Editar</button>
+                    <button class="btn btn-secondary btn-del-asesoria" data-id="${s.id}"
+                        style="font-size:13px">🗑️ Eliminar</button>
+                </div>
+            </div>`).join("");
 
     wrap.querySelectorAll(".btn-del-asesoria").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            if (!confirm("¿Eliminar esta asesoría?")) return;
-            const res = await apiFetch(`${API}/asesorias/${btn.dataset.id}`, { method: "DELETE" });
-            if (res?.ok) cargarAsesorias();
-            else alert(res?.error ?? "Error.");
+        btn.addEventListener("click", () => {
+            pedirConfirm({
+                titulo: "Eliminar asesoría",
+                msg: "¿Eliminar esta asesoría? Los alumnos inscritos perderán su reserva.",
+                icono: "🗑️",
+                labelOk: "Sí, eliminar",
+                esDestructivo: true,
+                onConfirm: async () => {
+                    const res = await apiFetch(`${API}/asesorias/${btn.dataset.id}`, { method: "DELETE" });
+                    if (res?.ok) cargarAsesorias();
+                    else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+                },
+            });
         });
     });
 
@@ -623,6 +644,7 @@ function initPopupEditarAsesoria() {
         const location = document.getElementById("edit-asesoria-lugar").value;
         const msg = document.getElementById("msg-editar-asesoria");
         if (!starts_at || !ends_at) { msg.textContent = "Completa las fechas."; return; }
+        if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
         const res = await apiFetch(`${API}/asesorias/${asesoriaEditId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -644,7 +666,7 @@ function abrirEditarAsesoria({ id, starts, ends, capacity, location, reservas })
     document.getElementById("edit-asesoria-cupo").value = capacity ?? 5;
     document.getElementById("edit-asesoria-lugar").value = location ?? "";
     document.getElementById("msg-editar-asesoria").textContent = "";
-    const aviso = document.getElementById("msg-editar-asesoria-reservas");
-    aviso.style.display = parseInt(reservas) > 0 ? "" : "none";
+    document.getElementById("msg-editar-asesoria-reservas").style.display =
+        parseInt(reservas) > 0 ? "" : "none";
     document.getElementById("popup-editar-asesoria").classList.add("active");
 }

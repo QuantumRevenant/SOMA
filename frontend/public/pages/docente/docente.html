@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOMA - Portal Docente</title>
   <link href="/pages/docente/docente.css" rel="stylesheet">
-  <link href="/pages/docente/modals/asistencia/asistencia.css" rel="stylesheet">
 </head>
 <body>
+
   <div class="header">
     <div class="logo" onclick="location.href='/'">SOMA</div>
     <div class="user-info">
@@ -18,154 +18,158 @@
   </div>
 
   <div class="container">
-    <div class="subtitle">PORTAL DOCENTE</div>
-    <div class="content">
 
-      <!-- Panel lateral -->
-      <div class="right">
-        <div class="info-card">
-          <div class="info-photo"></div>
-          <div class="info-text">
-            <label id="card-name">—</label>
-            <label id="card-email">—</label>
-            <label>Datos Personales</label>
-          </div>
+    <div class="welcome-banner">
+      <h1>Portal Docente</h1>
+      <p>Gestión de secciones, asistencia, notas y asesorías</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="programaciones">📋 Mis secciones</button>
+      <button class="tab" data-tab="asistencia">✅ Asistencia</button>
+      <button class="tab" data-tab="notas">📊 Notas</button>
+      <button class="tab" data-tab="observaciones">📝 Observaciones</button>
+      <button class="tab" data-tab="asesorias">🎓 Asesorías</button>
+    </div>
+
+    <!-- TAB: Programaciones -->
+    <div id="programaciones" class="content-section active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h2 style="color:#1e293b">Mis Secciones</h2>
+        <select id="select-periodo" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;font-weight:600;color:#1e293b;cursor:pointer">
+          <option value="">Periodo activo</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead class="header-table">
+            <tr><th>Código</th><th>Curso</th><th>Sección</th><th>Periodo</th><th>Alumnos</th></tr>
+          </thead>
+          <tbody class="body-table" id="tbody-secciones">
+            <tr><td colspan="5">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Asistencia -->
+    <div id="asistencia" class="content-section">
+      <h2 style="color:#1e293b;margin-bottom:16px">Asistencia</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+        <select id="select-seccion-asist" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:220px">
+          <option value="">Seleccione sección</option>
+        </select>
+        <select id="select-vista-asist" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px">
+          <option value="fecha">Ver por fecha</option>
+          <option value="alumno">Ver por alumno</option>
+        </select>
+        <input type="date" id="input-fecha-asist" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px">
+        <select id="select-alumno-asist" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:180px" disabled>
+          <option value="">Todos los alumnos</option>
+        </select>
+        <button class="btn btn-primary" id="btn-abrir-registro">+ Registrar hoy</button>
+      </div>
+      <div id="tabla-asistencia-wrap"></div>
+    </div>
+
+    <!-- TAB: Notas -->
+    <div id="notas" class="content-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h2 style="color:#1e293b">Notas</h2>
+        <select id="select-seccion-notas" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:220px">
+          <option value="">Seleccione una sección</option>
+        </select>
+      </div>
+      <div id="notas-wrap" style="display:none">
+        <div id="panel-evaluaciones" style="margin-bottom:16px;padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:white"></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead class="header-table" id="thead-notas"></thead>
+            <tbody class="body-table" id="tbody-notas"></tbody>
+          </table>
         </div>
-        <div class="items">
-          <ul>
-            <li class="active" data-tab="programaciones">Mis programaciones</li>
-            <li data-tab="asistencia">Asistencia</li>
-            <li data-tab="notas">Notas</li>
-            <li data-tab="observaciones">Observaciones</li>
-            <li data-tab="asesorias">Asesorías</li>
-          </ul>
+        <br>
+        <button class="btn btn-primary" id="btn-guardar-notas">Guardar notas</button>
+      </div>
+    </div>
+
+    <!-- TAB: Observaciones -->
+    <div id="observaciones" class="content-section">
+      <h2 style="color:#1e293b;margin-bottom:16px">Observaciones</h2>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <select id="select-seccion-obs" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:220px">
+          <option value="">Seleccione sección</option>
+        </select>
+        <select id="select-alumno-obs" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:200px" disabled>
+          <option value="">Seleccione alumno</option>
+        </select>
+      </div>
+      <div id="obs-contenido"></div>
+      <div style="padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:white;margin-top:12px">
+        <h4 style="margin-bottom:10px;color:#1e293b">Nueva observación</h4>
+        <textarea id="textarea-obs" rows="3"
+          placeholder="Escriba la observación..."
+          style="width:100%;padding:10px;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+          <button class="btn btn-primary" id="btn-guardar-obs" style="max-width:200px">Guardar observación</button>
+          <p id="msg-obs" style="margin:0;color:#27ae60;font-size:13px"></p>
         </div>
       </div>
+    </div>
 
-      <!-- Panel principal -->
-      <div class="left">
-        <div class="banner"></div>
+    <!-- TAB: Asesorías -->
+    <div id="asesorias" class="content-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h2 style="color:#1e293b">Asesorías</h2>
+        <button class="btn btn-primary" id="btn-nueva-asesoria">+ Nueva asesoría</button>
+      </div>
+      <div id="lista-asesorias"></div>
+    </div>
 
-        <!-- TAB: Programaciones -->
-        <div class="tab-content show" data-content="programaciones">
-          <div class="header-content">
-            <h3>MIS SECCIONES</h3>
-            <select id="select-periodo"><option value="">Periodo activo</option></select>
-          </div>
-          <br>
-          <div class="table-wrap">
-            <table class="table">
-              <thead class="header-table">
-                <tr><th>Código</th><th>Curso</th><th>Sección</th><th>Periodo</th><th>Alumnos</th></tr>
-              </thead>
-              <tbody class="body-table" id="tbody-secciones">
-                <tr><td colspan="5">Cargando...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+  </div>
 
-        <!-- TAB: Asistencia -->
-        <div class="tab-content" data-content="asistencia">
-          <div class="header-content"><h3>ASISTENCIA</h3></div>
-          <br>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-            <select id="select-seccion-asist" style="width:220px"><option value="">Seleccione sección</option></select>
-            <select id="select-vista-asist" style="width:160px">
-              <option value="fecha">Ver por fecha</option>
-              <option value="alumno">Ver por alumno</option>
-            </select>
-            <input type="date" id="input-fecha-asist" style="padding:8px;border:1px solid #ccc;border-radius:6px">
-            <select id="select-alumno-asist" style="width:180px" disabled><option value="">Todos los alumnos</option></select>
-            <button class="btn btn-primary" id="btn-abrir-registro" style="padding:8px 14px">+ Registrar hoy</button>
-          </div>
-          <div id="tabla-asistencia-wrap"></div>
-        </div>
-
-        <!-- TAB: Notas -->
-        <div class="tab-content" data-content="notas">
-          <div class="header-content">
-            <h3>NOTAS</h3>
-            <select id="select-seccion-notas"><option value="">Seleccione una sección</option></select>
-          </div>
-          <br>
-          <div id="notas-wrap" style="display:none">
-            <div id="panel-evaluaciones" style="margin-bottom:16px;padding:12px;border:1px solid #e5e7eb;border-radius:8px"></div>
-            <div class="table-wrap">
-              <table class="table">
-                <thead class="header-table" id="thead-notas"></thead>
-                <tbody class="body-table" id="tbody-notas"></tbody>
-              </table>
-            </div>
-            <br>
-            <button class="btn btn-primary" id="btn-guardar-notas">Guardar notas</button>
-          </div>
-        </div>
-
-        <!-- TAB: Observaciones -->
-        <div class="tab-content" data-content="observaciones">
-          <div class="header-content"><h3>OBSERVACIONES</h3></div>
-          <br>
-          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-            <select id="select-seccion-obs" style="width:220px"><option value="">Seleccione sección</option></select>
-            <select id="select-alumno-obs" style="width:200px" disabled><option value="">Seleccione alumno</option></select>
-          </div>
-          <div id="obs-contenido"></div>
-          <br>
-          <div style="padding:12px;border:1px solid #e5e7eb;border-radius:8px">
-            <h4 style="margin-bottom:8px">Nueva observación</h4>
-            <textarea id="textarea-obs" rows="3"
-              placeholder="Escriba la observación..."
-              style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;font-size:14px"></textarea>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
-              <button class="btn btn-primary" id="btn-guardar-obs" style="max-width:180px">Guardar observación</button>
-              <p id="msg-obs" style="margin:0;color:#27ae60"></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB: Asesorías -->
-        <div class="tab-content" data-content="asesorias">
-          <div class="header-content">
-            <h3>ASESORÍAS</h3>
-            <button class="btn btn-primary" id="btn-nueva-asesoria" style="padding:8px 14px">+ Nueva asesoría</button>
-          </div>
-          <br>
-          <div id="form-asesoria" style="display:none;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px">
-            <h4 style="margin-bottom:10px">Nueva asesoría</h4>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div>
-                <label style="font-size:13px">Inicio</label>
-                <input type="datetime-local" id="asesoria-inicio"
-                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
-              </div>
-              <div>
-                <label style="font-size:13px">Fin</label>
-                <input type="datetime-local" id="asesoria-fin"
-                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
-              </div>
-              <div>
-                <label style="font-size:13px">Cupo máximo</label>
-                <input type="number" id="asesoria-cupo" value="5" min="1"
-                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
-              </div>
-              <div>
-                <label style="font-size:13px">Ubicación</label>
-                <input type="text" id="asesoria-lugar" placeholder="Ej: Aula B-204 / Meet link"
-                  style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
-              </div>
-            </div>
-            <button class="btn btn-primary" id="btn-guardar-asesoria" style="margin-top:12px;padding:8px 16px">Guardar</button>
-          </div>
-          <div id="lista-asesorias"></div>
-        </div>
-
+  <!-- Popup: Confirmación reutilizable -->
+  <div class="popup" id="popup-confirm">
+    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
+      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
+      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
+      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
       </div>
     </div>
   </div>
 
+  <!-- Popup: Nueva asesoría -->
+  <div class="popup" id="popup-nueva-asesoria">
+    <div class="popup-content">
+      <span class="close-popup" id="close-popup-nueva-asesoria">&times;</span>
+      <h3 style="margin-bottom:16px">Nueva asesoría</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Inicio</label>
+          <input type="datetime-local" id="asesoria-inicio" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Fin</label>
+          <input type="datetime-local" id="asesoria-fin" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
+          <input type="number" id="asesoria-cupo" value="5" min="1" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Ubicación</label>
+          <input type="text" id="asesoria-lugar" placeholder="Ej: Aula B-204 / Meet link" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <button class="btn btn-primary" id="btn-guardar-asesoria">Crear asesoría</button>
+        <p id="msg-nueva-asesoria" style="color:#e74c3c;font-size:13px;margin:0"></p>
+      </div>
+    </div>
+  </div>
 
-  <!-- Popup: editar asesoría -->
+  <!-- Popup: Editar asesoría -->
   <div class="popup" id="popup-editar-asesoria">
     <div class="popup-content">
       <span class="close-popup" id="close-popup-editar-asesoria">&times;</span>
@@ -173,35 +177,34 @@
       <p id="msg-editar-asesoria-reservas" style="background:#fff3cd;color:#856404;padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none">
         ⚠️ Esta asesoría ya tiene reservas. Los alumnos inscritos verán el cambio de horario.
       </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:12px">
         <div>
-          <label style="font-size:13px">Inicio</label>
-          <input type="datetime-local" id="edit-asesoria-inicio" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+          <label style="font-size:13px;font-weight:600;color:#374151">Inicio</label>
+          <input type="datetime-local" id="edit-asesoria-inicio" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
-          <label style="font-size:13px">Fin</label>
-          <input type="datetime-local" id="edit-asesoria-fin" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+          <label style="font-size:13px;font-weight:600;color:#374151">Fin</label>
+          <input type="datetime-local" id="edit-asesoria-fin" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
-          <label style="font-size:13px">Cupo máximo</label>
-          <input type="number" id="edit-asesoria-cupo" min="1" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+          <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
+          <input type="number" id="edit-asesoria-cupo" min="1" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
-          <label style="font-size:13px">Ubicación</label>
-          <input type="text" id="edit-asesoria-lugar" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px">
+          <label style="font-size:13px;font-weight:600;color:#374151">Ubicación</label>
+          <input type="text" id="edit-asesoria-lugar" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
+        <button class="btn btn-primary" id="btn-confirmar-editar-asesoria">Guardar cambios</button>
+        <p id="msg-editar-asesoria" style="color:#e74c3c;font-size:13px;margin:0"></p>
       </div>
-      <p id="msg-editar-asesoria" style="color:#e74c3c;font-size:13px;margin-top:8px"></p>
-      <button class="btn btn-primary" id="btn-confirmar-editar-asesoria" style="margin-top:12px">Guardar cambios</button>
     </div>
   </div>
 
-  <!-- Popup asistencia -->
+  <!-- Popup: Registrar asistencia -->
   <div class="popup" id="popup-asistencia">
     <div class="popup-content">
-      <span class="close-popup" id="close-popup">&times;</span>
-      <h3>Registrar Asistencia — <span id="popup-fecha"></span></h3>
-      <br>
+      <span class="close-popup" id="close-popup-asistencia">&times;</span>
+      <h3 style="margin-bottom:16px">Registrar Asistencia — <span id="popup-fecha"></span></h3>
       <div class="table-wrap-popup">
         <table class="table">
           <thead class="header-table">

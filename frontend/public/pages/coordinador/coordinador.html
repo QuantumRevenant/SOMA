@@ -71,7 +71,6 @@
         <button class="subtab active" data-subtab="periodos">Periodos</button>
         <button class="subtab" data-subtab="secciones">Secciones</button>
       </div>
-
       <div id="sub-periodos" class="subtab-panel active">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <h3 style="color:#1e293b">Periodos académicos</h3>
@@ -79,7 +78,6 @@
         </div>
         <div id="lista-periodos"><p class="txt-vacio">Cargando...</p></div>
       </div>
-
       <div id="sub-secciones" class="subtab-panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <div style="display:flex;align-items:center;gap:10px">
@@ -118,7 +116,6 @@
         <button class="subtab" data-subtab="rpt-asistencia">📋 Asistencia</button>
         <button class="subtab" data-subtab="rpt-servicios">🛎 Servicios</button>
       </div>
-
       <div id="sub-rpt-alertas" class="subtab-panel active">
         <div class="alerta-config" id="alerta-config"></div>
         <div id="lista-alertas"><p class="txt-vacio">Cargando...</p></div>
@@ -134,6 +131,19 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Popup: Confirmación reutilizable -->
+  <div class="popup" id="popup-confirm">
+    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
+      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
+      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
+      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
+      </div>
+    </div>
   </div>
 
   <!-- Popup: Perfil alumno -->
