@@ -130,6 +130,19 @@
           <label style="font-size:13px;font-weight:600;color:#374151">Lugar (opcional)</label>
           <input type="text" id="input-location" placeholder="Ej: Consultorio 3" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
+          <input type="number" id="input-capacity" value="1" min="1" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Asignar estudiantes <span style="font-weight:400;color:#9ca3af">(opcional)</span></label>
+          <div style="position:relative;margin-top:4px">
+            <input type="text" id="input-buscar-cita" placeholder="Buscar por nombre o email..."
+              style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;box-sizing:border-box">
+            <div id="cita-search-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:10;max-height:160px;overflow-y:auto"></div>
+          </div>
+          <div id="cita-alumnos-chips" style="margin-top:8px"></div>
+        </div>
         <button class="btn btn-primary" id="btn-confirmar-cita">Crear slot</button>
         <p id="msg-nueva-cita" style="color:#e74c3c;font-size:13px"></p>
       </div>
@@ -156,6 +169,10 @@
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Lugar (opcional)</label>
           <input type="text" id="edit-cita-location" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
+          <input type="number" id="edit-cita-capacity" min="1" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <button class="btn btn-primary" id="btn-confirmar-editar-cita">Guardar cambios</button>
         <p id="msg-editar-cita" style="color:#e74c3c;font-size:13px;margin:0"></p>

@@ -76,7 +76,6 @@ export async function getEvaluacionesBySeccion(req, res) {
     }
 }
 
-// GET /api/docente/secciones/:id/plantilla — plantilla del coordinador para ese curso
 export async function getPlantillaBySeccion(req, res) {
     try {
         const [rows] = await pool.query(`
@@ -93,14 +92,11 @@ export async function getPlantillaBySeccion(req, res) {
     }
 }
 
-// POST /api/docente/secciones/:id/evaluaciones { name, weight, template_id? }
 export async function createEvaluacion(req, res) {
     const { name, weight, template_id } = req.body;
     if (!name || weight == null) {
         return res.status(400).json({ error: "Nombre y peso requeridos" });
     }
-
-    // Verificar que la sección pertenece al docente
     const [check] = await pool.query(
         "SELECT id FROM course_sections WHERE id = ? AND docente_id = ?",
         [req.params.id, req.user.id]
@@ -108,8 +104,6 @@ export async function createEvaluacion(req, res) {
     if (check.length === 0) {
         return res.status(403).json({ error: "Sección no autorizada" });
     }
-
-    // Verificar que la suma de pesos no supere 100
     const [suma] = await pool.query(
         "SELECT COALESCE(SUM(weight), 0) AS total FROM evaluations WHERE course_section_id = ?",
         [req.params.id]
@@ -117,7 +111,6 @@ export async function createEvaluacion(req, res) {
     if (parseFloat(suma[0].total) + parseFloat(weight) > 100) {
         return res.status(400).json({ error: `La suma de pesos superaría 100% (actual: ${suma[0].total}%)` });
     }
-
     try {
         const [result] = await pool.query(
             "INSERT INTO evaluations (course_section_id, template_id, name, weight) VALUES (?, ?, ?, ?)",
@@ -130,11 +123,9 @@ export async function createEvaluacion(req, res) {
     }
 }
 
-// PUT /api/docente/evaluaciones/:id { name, weight }
 export async function updateEvaluacion(req, res) {
     const { name, weight } = req.body;
     try {
-        // Verificar que la evaluación pertenece a una sección del docente
         const [check] = await pool.query(`
       SELECT e.id FROM evaluations e
       JOIN course_sections cs ON cs.id = e.course_section_id
@@ -154,7 +145,6 @@ export async function updateEvaluacion(req, res) {
     }
 }
 
-// DELETE /api/docente/evaluaciones/:id
 export async function deleteEvaluacion(req, res) {
     try {
         const [check] = await pool.query(`
@@ -165,7 +155,6 @@ export async function deleteEvaluacion(req, res) {
         if (check.length === 0) {
             return res.status(403).json({ error: "No autorizado" });
         }
-        // Eliminar notas asociadas primero
         await pool.query("DELETE FROM grades WHERE evaluation_id = ?", [req.params.id]);
         await pool.query("DELETE FROM evaluations WHERE id = ?", [req.params.id]);
         res.json({ ok: true });
@@ -237,10 +226,8 @@ export async function getAsistencia(req, res) {
 
 // ── Observaciones ─────────────────────────────────────────────────────────────
 
-// GET /api/docente/alumnos/:id/observaciones
 export async function getObservacionesAlumno(req, res) {
     try {
-        // Verificar que el alumno pertenece a alguna sección del docente
         const [check] = await pool.query(`
       SELECT 1 FROM enrollments e
       JOIN course_sections cs ON cs.id = e.course_section_id
@@ -250,7 +237,6 @@ export async function getObservacionesAlumno(req, res) {
         if (check.length === 0) {
             return res.status(403).json({ error: "Alumno no pertenece a tus secciones" });
         }
-
         const [docente] = await pool.query(`
       SELECT o.id, o.content, o.created_at, o.updated_at,
              u.full_name AS author_name, o.author_id
@@ -259,7 +245,6 @@ export async function getObservacionesAlumno(req, res) {
       WHERE o.student_id = ? AND o.type = 'docente'
       ORDER BY o.created_at DESC
     `, [req.params.id]);
-
         const [psicologo] = await pool.query(`
       SELECT o.id, o.content, o.created_at,
              u.full_name AS author_name
@@ -268,7 +253,6 @@ export async function getObservacionesAlumno(req, res) {
       WHERE o.student_id = ? AND o.type = 'psicologo'
       ORDER BY o.created_at DESC
     `, [req.params.id]);
-
         res.json({ docente, psicologo, myId: req.user.id });
     } catch (err) {
         console.error(err);
@@ -302,7 +286,6 @@ export async function addObservacion(req, res) {
     }
 }
 
-// PUT /api/docente/observaciones/:id
 export async function updateObservacion(req, res) {
     const { content } = req.body;
     if (!content?.trim()) {
@@ -321,6 +304,23 @@ export async function updateObservacion(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al actualizar observación" });
+    }
+}
+
+export async function deleteObservacion(req, res) {
+    try {
+        const [check] = await pool.query(
+            "SELECT id FROM observations WHERE id = ? AND author_id = ? AND type = 'docente'",
+            [req.params.id, req.user.id]
+        );
+        if (check.length === 0) {
+            return res.status(403).json({ error: "No autorizado" });
+        }
+        await pool.query("DELETE FROM observations WHERE id = ?", [req.params.id]);
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al eliminar observación" });
     }
 }
 
@@ -344,17 +344,34 @@ export async function getMisAsesorias(req, res) {
     }
 }
 
+// ── NUEVO: validación fecha + asignación opcional de múltiples alumnos ──
 export async function createAsesoria(req, res) {
-    const { starts_at, ends_at, capacity = 5, location } = req.body;
-    if (!starts_at || !ends_at) {
+    const { starts_at, ends_at, capacity = 5, location, student_ids = [] } = req.body;
+    if (!starts_at || !ends_at)
         return res.status(400).json({ error: "Fecha de inicio y fin requeridas" });
-    }
+
+    if (new Date(starts_at) < new Date())
+        return res.status(400).json({ error: "No puedes crear una asesoría en el pasado" });
+
+    if (student_ids.length > capacity)
+        return res.status(400).json({ error: `No puedes asignar más alumnos que el cupo (${capacity})` });
+
     try {
         const [result] = await pool.query(
             "INSERT INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES (?, 'asesoria', ?, ?, ?, ?)",
             [req.user.id, starts_at, ends_at, capacity, location ?? null]
         );
-        res.json({ ok: true, id: result.insertId });
+        const slotId = result.insertId;
+
+        if (student_ids.length > 0) {
+            const values = student_ids.map(id => [slotId, id, 'confirmada']);
+            await pool.query(
+                "INSERT INTO slot_bookings (slot_id, student_id, status) VALUES ?",
+                [values]
+            );
+        }
+
+        res.json({ ok: true, id: slotId });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al crear asesoría" });
@@ -371,7 +388,6 @@ export async function editarAsesoria(req, res) {
             [req.params.id, req.user.id]
         );
         if (check.length === 0) return res.status(403).json({ error: "No autorizado" });
-
         await pool.query(
             "UPDATE slots SET starts_at = ?, ends_at = ?, capacity = ?, location = ? WHERE id = ?",
             [starts_at, ends_at, capacity ?? 5, location ?? null, req.params.id]
@@ -398,23 +414,5 @@ export async function deleteAsesoria(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al eliminar asesoría" });
-    }
-}
-
-// DELETE /api/docente/observaciones/:id
-export async function deleteObservacion(req, res) {
-    try {
-        const [check] = await pool.query(
-            "SELECT id FROM observations WHERE id = ? AND author_id = ? AND type = 'docente'",
-            [req.params.id, req.user.id]
-        );
-        if (check.length === 0) {
-            return res.status(403).json({ error: "No autorizado" });
-        }
-        await pool.query("DELETE FROM observations WHERE id = ?", [req.params.id]);
-        res.json({ ok: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Error al eliminar observación" });
     }
 }

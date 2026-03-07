@@ -395,6 +395,7 @@ function renderCitas() {
                     data-starts="${c.starts_at}"
                     data-ends="${c.ends_at}"
                     data-location="${c.location ?? ""}"
+                    data-capacity="${c.capacity ?? 1}"
                     data-reservada="${reservada ? 1 : 0}"
                     style="font-size:13px">✏️ Editar</button>
                 <button class="btn ${reservada ? "btn-cancelar" : "btn-secondary"} btn-gestionar-cita"
@@ -445,13 +446,14 @@ function initPopupEditarCita() {
         const starts_at = document.getElementById("edit-cita-starts").value;
         const ends_at = document.getElementById("edit-cita-ends").value;
         const location = document.getElementById("edit-cita-location").value.trim();
+        const capacity = parseInt(document.getElementById("edit-cita-capacity").value) || 1;
         const msg = document.getElementById("msg-editar-cita");
         if (!starts_at || !ends_at) { msg.textContent = "Completa las fechas."; return; }
         if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
         const res = await apiFetch(`${API}/citas/${citaEditId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ starts_at, ends_at, location: location || null }),
+            body: JSON.stringify({ starts_at, ends_at, location: location || null, capacity }),
         });
         if (res?.ok) {
             popup.classList.remove("active");
@@ -463,11 +465,12 @@ function initPopupEditarCita() {
     });
 }
 
-function abrirEditarCita({ id, starts, ends, location, reservada }) {
+function abrirEditarCita({ id, starts, ends, location, capacity, reservada }) {
     citaEditId = id;
     document.getElementById("edit-cita-starts").value = (starts ?? "").slice(0, 16);
     document.getElementById("edit-cita-ends").value = (ends ?? "").slice(0, 16);
     document.getElementById("edit-cita-location").value = location ?? "";
+    document.getElementById("edit-cita-capacity").value = capacity ?? 1;
     document.getElementById("msg-editar-cita").textContent = "";
     document.getElementById("msg-editar-cita-reserva").style.display =
         reservada === "1" ? "" : "none";
@@ -477,33 +480,125 @@ function abrirEditarCita({ id, starts, ends, location, reservada }) {
 // ── Popup Nueva Cita ──────────────────────────────────────────────────────────
 function initPopupNuevaCita() {
     const popup = document.getElementById("popup-nueva-cita");
-    document.getElementById("btn-nueva-cita").addEventListener("click", () => {
-        popup.classList.add("active");
-        document.getElementById("msg-nueva-cita").textContent = "";
+    const inputBuscar = document.getElementById("input-buscar-cita");
+    const dropdown = document.getElementById("cita-search-results");
+
+    let alumnosSeleccionados = []; // [{id, nombre}]
+
+    function renderChips() {
+        const wrap = document.getElementById("cita-alumnos-chips");
+        const capacity = parseInt(document.getElementById("input-capacity").value) || 1;
+        wrap.innerHTML = alumnosSeleccionados.map(a => `
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:20px;padding:4px 10px;font-size:13px;color:#c0392b">
+                👤 ${a.nombre}
+                <button data-id="${a.id}" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:14px;line-height:1;padding:0 0 0 2px" title="Quitar">×</button>
+            </span>`).join("");
+        wrap.querySelectorAll("button[data-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                alumnosSeleccionados = alumnosSeleccionados.filter(a => a.id !== btn.dataset.id);
+                renderChips();
+            });
+        });
+        const lleno = alumnosSeleccionados.length >= capacity;
+        inputBuscar.disabled = lleno;
+        inputBuscar.placeholder = lleno ? "Cupo alcanzado" : "Buscar por nombre o email...";
+    }
+
+    // Buscador
+    let debounce;
+    inputBuscar.addEventListener("input", () => {
+        clearTimeout(debounce);
+        const q = inputBuscar.value.trim();
+        if (q.length < 2) { dropdown.style.display = "none"; return; }
+        debounce = setTimeout(async () => {
+            const data = await apiFetch(`${API}/estudiantes?q=${encodeURIComponent(q)}`);
+            if (!data?.general?.length) { dropdown.style.display = "none"; return; }
+            dropdown.innerHTML = data.general.map(e => `
+                <div class="dropdown-item" data-id="${e.id}" data-nombre="${e.full_name}"
+                    style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6">
+                    <strong style="font-size:13px">${e.full_name}</strong>
+                    <span style="font-size:12px;color:#666;display:block">${e.email}</span>
+                </div>`).join("");
+            dropdown.style.display = "block";
+        }, 300);
     });
+
+    dropdown.addEventListener("click", e => {
+        const item = e.target.closest(".dropdown-item");
+        if (!item) return;
+        const capacity = parseInt(document.getElementById("input-capacity").value) || 1;
+        const yaEsta = alumnosSeleccionados.some(a => a.id === item.dataset.id);
+        if (!yaEsta && alumnosSeleccionados.length < capacity) {
+            alumnosSeleccionados.push({ id: item.dataset.id, nombre: item.dataset.nombre });
+        }
+        inputBuscar.value = "";
+        dropdown.style.display = "none";
+        renderChips();
+    });
+
+    document.getElementById("input-capacity").addEventListener("input", renderChips);
+
+    document.addEventListener("click", e => {
+        if (!e.target.closest("#popup-nueva-cita")) dropdown.style.display = "none";
+    });
+
+    // Abrir
+    document.getElementById("btn-nueva-cita").addEventListener("click", () => {
+        const ahora = new Date();
+        ahora.setSeconds(0, 0);
+        const minStr = ahora.toISOString().slice(0, 16);
+        document.getElementById("input-starts").min = minStr;
+        document.getElementById("input-ends").min = minStr;
+        document.getElementById("input-capacity").value = "1";
+        document.getElementById("msg-nueva-cita").textContent = "";
+        alumnosSeleccionados = [];
+        inputBuscar.value = "";
+        inputBuscar.disabled = false;
+        inputBuscar.placeholder = "Buscar por nombre o email...";
+        dropdown.style.display = "none";
+        renderChips();
+        popup.classList.add("active");
+    });
+
     document.getElementById("close-popup-cita").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
         if (e.target === popup) popup.classList.remove("active");
     });
 
+    // Guardar
     document.getElementById("btn-confirmar-cita").addEventListener("click", async () => {
         const starts_at = document.getElementById("input-starts").value;
         const ends_at = document.getElementById("input-ends").value;
         const location = document.getElementById("input-location").value.trim();
+        const capacity = parseInt(document.getElementById("input-capacity").value) || 1;
         const msg = document.getElementById("msg-nueva-cita");
+
         if (!starts_at || !ends_at) { msg.textContent = "Completa las fechas."; return; }
+        if (new Date(starts_at) < new Date()) { msg.textContent = "La fecha de inicio no puede ser en el pasado."; return; }
         if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+
         const res = await apiFetch(`${API}/citas`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ starts_at, ends_at, location: location || null }),
+            body: JSON.stringify({
+                starts_at, ends_at,
+                location: location || null,
+                capacity,
+                student_ids: alumnosSeleccionados.map(a => a.id),
+            }),
         });
         if (res?.ok) {
             popup.classList.remove("active");
             document.getElementById("input-starts").value = "";
             document.getElementById("input-ends").value = "";
             document.getElementById("input-location").value = "";
+            document.getElementById("input-capacity").value = "1";
+            alumnosSeleccionados = [];
+            inputBuscar.value = "";
+            inputBuscar.disabled = false;
+            inputBuscar.placeholder = "Buscar por nombre o email...";
+            renderChips();
             await cargarCitas();
             await cargarCalendario();
         } else {

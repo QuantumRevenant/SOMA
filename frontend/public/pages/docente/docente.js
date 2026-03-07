@@ -546,37 +546,135 @@ async function cargarObservaciones(studentId) {
 // ── Asesorías ─────────────────────────────────────────────────────────────────
 function initPopupNuevaAsesoria() {
     const popup = document.getElementById("popup-nueva-asesoria");
-    document.getElementById("btn-nueva-asesoria").addEventListener("click", () => {
+
+    // ── Estado chips ──
+    let alumnosSeleccionados = []; // [{id, nombre}]
+
+    function renderChips() {
+        const wrap = document.getElementById("asesoria-alumnos-chips");
+        const capacity = parseInt(document.getElementById("asesoria-cupo").value) || 5;
+        wrap.innerHTML = alumnosSeleccionados.map(a => `
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:20px;padding:4px 10px;font-size:13px;color:#c0392b">
+                👤 ${a.nombre}
+                <button data-id="${a.id}" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:14px;line-height:1;padding:0 0 0 2px" title="Quitar">×</button>
+            </span>`).join("");
+        wrap.querySelectorAll("button[data-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                alumnosSeleccionados = alumnosSeleccionados.filter(a => a.id !== btn.dataset.id);
+                renderChips();
+            });
+        });
+        const limitMsg = document.getElementById("asesoria-alumnos-limit");
+        limitMsg.textContent = alumnosSeleccionados.length >= capacity
+            ? `Cupo máximo alcanzado (${capacity})` : "";
+    }
+
+    // ── Buscador con debounce ──
+    const inputBuscar = document.getElementById("asesoria-buscar-alumno");
+    const dropdownAlumn = document.getElementById("asesoria-alumno-results");
+    let debounce;
+
+    inputBuscar.addEventListener("input", () => {
+        clearTimeout(debounce);
+        const q = inputBuscar.value.trim();
+        if (q.length < 2) { dropdownAlumn.style.display = "none"; return; }
+        debounce = setTimeout(async () => {
+            // Buscar en alumnos cacheados de todas las secciones
+            const todos = await Promise.all(
+                seccionesCache.map(s => apiFetch(`${API}/secciones/${s.id}/alumnos`))
+            );
+            const mapaAlumnos = {};
+            todos.flat().filter(Boolean).forEach(a => { mapaAlumnos[a.id] = a; });
+            const filtrados = Object.values(mapaAlumnos).filter(a =>
+                a.full_name.toLowerCase().includes(q.toLowerCase()) ||
+                a.email.toLowerCase().includes(q.toLowerCase())
+            );
+            if (!filtrados.length) { dropdownAlumn.style.display = "none"; return; }
+            dropdownAlumn.innerHTML = filtrados.map(a => `
+                <div class="dropdown-item" data-id="${a.id}" data-nombre="${a.full_name}"
+                    style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6">
+                    <strong style="font-size:13px">${a.full_name}</strong>
+                    <span style="font-size:12px;color:#666;display:block">${a.email}</span>
+                </div>`).join("");
+            dropdownAlumn.style.display = "block";
+        }, 250);
+    });
+
+    dropdownAlumn.addEventListener("click", e => {
+        const item = e.target.closest(".dropdown-item");
+        if (!item) return;
+        const capacity = parseInt(document.getElementById("asesoria-cupo").value) || 5;
+        const yaEsta = alumnosSeleccionados.some(a => a.id === item.dataset.id);
+        if (!yaEsta && alumnosSeleccionados.length < capacity) {
+            alumnosSeleccionados.push({ id: item.dataset.id, nombre: item.dataset.nombre });
+        }
+        inputBuscar.value = "";
+        dropdownAlumn.style.display = "none";
+        renderChips();
+    });
+
+    document.addEventListener("click", e => {
+        if (!e.target.closest("#popup-nueva-asesoria")) dropdownAlumn.style.display = "none";
+    });
+
+    // ── Abrir popup ──
+    document.getElementById("btn-nueva-asesoria").addEventListener("click", async () => {
+        const ahora = new Date();
+        ahora.setSeconds(0, 0);
+        const minStr = ahora.toISOString().slice(0, 16);
+        document.getElementById("asesoria-inicio").min = minStr;
+        document.getElementById("asesoria-fin").min = minStr;
         document.getElementById("msg-nueva-asesoria").textContent = "";
+        alumnosSeleccionados = [];
+        inputBuscar.value = "";
+        renderChips();
+
+        // Pre-cargar alumnos en cache si aún no hay
+        if (seccionesCache.length === 0) {
+            await cargarSecciones();
+        }
+
         popup.classList.add("active");
     });
+
     document.getElementById("close-popup-nueva-asesoria").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
         if (e.target === popup) popup.classList.remove("active");
     });
+
+    // ── Guardar ──
     document.getElementById("btn-guardar-asesoria").addEventListener("click", async () => {
         const starts_at = document.getElementById("asesoria-inicio").value;
         const ends_at = document.getElementById("asesoria-fin").value;
         const capacity = document.getElementById("asesoria-cupo").value;
         const location = document.getElementById("asesoria-lugar").value;
         const msg = document.getElementById("msg-nueva-asesoria");
+
         if (!starts_at || !ends_at) { msg.textContent = "Complete fecha de inicio y fin."; return; }
+        if (new Date(starts_at) < new Date()) { msg.textContent = "La fecha de inicio no puede ser en el pasado."; return; }
         if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+
+        // Crear el slot con todos los alumnos de una sola vez
         const res = await apiFetch(`${API}/asesorias`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ starts_at, ends_at, capacity: parseInt(capacity) || 5, location }),
+            body: JSON.stringify({
+                starts_at, ends_at,
+                capacity: parseInt(capacity) || 5,
+                location,
+                student_ids: alumnosSeleccionados.map(a => a.id),
+            }),
         });
-        if (res?.ok) {
-            popup.classList.remove("active");
-            document.getElementById("asesoria-inicio").value = "";
-            document.getElementById("asesoria-fin").value = "";
-            document.getElementById("asesoria-lugar").value = "";
-            cargarAsesorias();
-        } else {
-            msg.textContent = res?.error ?? "Error.";
-        }
+        if (!res?.ok) { msg.textContent = res?.error ?? "Error."; return; }
+
+        popup.classList.remove("active");
+        document.getElementById("asesoria-inicio").value = "";
+        document.getElementById("asesoria-fin").value = "";
+        document.getElementById("asesoria-lugar").value = "";
+        alumnosSeleccionados = [];
+        renderChips();
+        cargarAsesorias();
     });
 }
 
