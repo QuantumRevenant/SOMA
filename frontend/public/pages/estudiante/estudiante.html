@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOMA - Portal Estudiante</title>
+  <link href="/pages/estudiante/estudiante.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo" onclick="location.href='/'">SOMA</div>
+    <div class="user-info">
+      <span id="user-name"></span>
+      <div class="user-avatar" id="user-avatar"></div>
+      <button class="logout-btn" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="welcome-banner">
+      <h1>¡Bienvenido a SOMA!</h1>
+      <p>Tu espacio personalizado de aprendizaje</p>
+    </div>
+
+    <div class="stats-overview">
+      <div class="stat-card"><h3>Cursos Activos</h3><div class="value" id="stat-cursos">—</div></div>
+      <div class="stat-card"><h3>Promedio General</h3><div class="value" id="stat-promedio">—</div></div>
+      <div class="stat-card"><h3>Asesorías disp.</h3><div class="value" id="stat-asesorias">—</div></div>
+      <div class="stat-card"><h3>Talleres disp.</h3><div class="value" id="stat-talleres">—</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="courses">Mis Cursos</button>
+      <button class="tab" data-tab="grades">Calificaciones</button>
+      <button class="tab" data-tab="services">Servicios</button>
+      <button class="tab" data-tab="calendar">Calendario</button>
+      <button class="tab" data-tab="notifications">Notificaciones</button>
+    </div>
+
+    <!-- TAB: Mis Cursos -->
+    <div id="courses" class="content-section active">
+      <div class="ciclo-selector-wrap">
+        <label class="ciclo-label">Ciclo</label>
+        <select id="select-ciclo" class="ciclo-select"></select>
+      </div>
+      <div class="courses-grid" id="courses-grid">
+        <p style="color:#999">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- TAB: Calificaciones -->
+    <div id="grades" class="content-section">
+      <div class="ciclo-selector-wrap" style="margin-bottom:16px">
+        <label class="ciclo-label">Ciclo</label>
+        <select id="select-ciclo-grades" class="ciclo-select"></select>
+      </div>
+      <div class="notifications" id="grades-wrap">
+        <h2 style="margin-bottom:20px;color:#1e293b">Mis Calificaciones</h2>
+        <p style="color:#999">Selecciona un curso.</p>
+      </div>
+    </div>
+
+    <!-- TAB: Servicios -->
+    <div id="services" class="content-section">
+      <div class="servicios-tabs">
+        <button class="servicio-btn active" data-servicio="asesorias">📚 Asesorías</button>
+        <button class="servicio-btn" data-servicio="talleres">🎯 Talleres</button>
+        <button class="servicio-btn" data-servicio="citas">🧠 Citas Psicológicas</button>
+        <button class="servicio-btn" data-servicio="mis-inscripciones">📋 Mis inscripciones</button>
+      </div>
+
+      <div id="srv-asesorias" class="servicio-panel active">
+        <div id="lista-asesorias"><p style="color:#999">Cargando...</p></div>
+      </div>
+      <div id="srv-talleres" class="servicio-panel">
+        <div id="lista-talleres"><p style="color:#999">Cargando...</p></div>
+      </div>
+      <div id="srv-citas" class="servicio-panel">
+        <div id="lista-citas"><p style="color:#999">Cargando...</p></div>
+      </div>
+      <div id="srv-mis-inscripciones" class="servicio-panel">
+        <div id="lista-mis-servicios"><p style="color:#999">Cargando...</p></div>
+      </div>
+    </div>
+
+    <!-- TAB: Calendario -->
+    <div id="calendar" class="content-section">
+      <div class="notifications">
+        <h2 style="margin-bottom:20px;color:#1e293b">Próximas Actividades</h2>
+        <div class="notification-item">
+          <div class="notification-title">Funcionalidad próximamente disponible</div>
+          <p>Aquí verás tus evaluaciones y entregas programadas.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Notificaciones -->
+    <div id="notifications" class="content-section">
+      <div class="notifications">
+        <h2 style="margin-bottom:20px;color:#1e293b">Notificaciones</h2>
+        <div class="notification-item">
+          <div class="notification-title">Funcionalidad próximamente disponible</div>
+          <p>Aquí verás avisos de tus docentes y del sistema.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- Popup de confirmación reutilizable -->
+  <div class="popup" id="popup-confirm">
+    <div class="popup-content popup-confirm-content">
+      <div class="confirm-icon" id="confirm-icon">❓</div>
+      <h3 id="confirm-titulo" style="margin-bottom:8px;text-align:center">¿Confirmar acción?</h3>
+      <p id="confirm-msg" style="color:#555;font-size:14px;text-align:center;margin-bottom:20px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup curso: Notas + Asistencia -->
+  <div class="popup" id="popup-curso">
+    <div class="popup-content">
+      <span class="close-popup" id="close-popup-curso">&times;</span>
+      <h3 id="popup-titulo" style="margin-bottom:4px">—</h3>
+      <p id="popup-docente" style="color:#666;font-size:13px;margin-bottom:14px"></p>
+
+      <div class="tabs-popup">
+        <button class="tab-popup active" data-ptab="notas">Notas</button>
+        <button class="tab-popup" data-ptab="asistencia">Asistencia</button>
+      </div>
+
+      <!-- Panel notas -->
+      <div class="content-popup active" id="panel-notas">
+        <div style="overflow-x:auto">
+          <table class="notas">
+            <thead><tr><th>Evaluación</th><th>Peso</th><th>Nota</th></tr></thead>
+            <tbody id="tbody-notas-popup"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2"><strong>Promedio actual</strong>
+                  <small id="peso-completado" style="color:#999;font-size:11px"></small>
+                </td>
+                <td><strong id="promedio-popup">—</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel asistencia -->
+      <div class="content-popup" id="panel-asistencia">
+        <div id="resumen-asistencia" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px"></div>
+        <div style="overflow-x:auto">
+          <table class="notas" id="tabla-asistencia">
+            <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody id="tbody-asistencia"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/estudiante/estudiante.js"></script>
+</body>
+</html>

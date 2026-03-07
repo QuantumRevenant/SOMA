@@ -1,0 +1,35 @@
+name: SOMA
+
+services:
+  backend:
+    build: ./backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:3000"
+    volumes:
+      - ./frontend:/app/frontend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/src/db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
