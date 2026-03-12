@@ -348,23 +348,50 @@ INSERT IGNORE INTO attendance (enrollment_id, date, status, recorded_by) VALUES
   (6, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'ausente',  2),
   (6, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'presente', 2);
 
--- Slots de asesoría (Carlos Docente) — próximas semanas
+-- Slots de asesoría (Carlos Docente) — próximas semanas, horas en bloques de 15 min
 -- slot 1: cap 2, lleno (Luis + Ana)
 -- slot 2: cap 3, 1 libre (Luis + Pedro)
 -- slot 3 y 4: cap 5, libres
 INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 2  DAY), DATE_ADD(NOW(), INTERVAL 2  DAY) + INTERVAL 2 HOUR, 2, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 5  DAY), DATE_ADD(NOW(), INTERVAL 5  DAY) + INTERVAL 2 HOUR, 3, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 9  DAY), DATE_ADD(NOW(), INTERVAL 9  DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 12 DAY), DATE_ADD(NOW(), INTERVAL 12 DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204');
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 2  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 2  DAY)), ' 12:00:00'),
+    2, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 5  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 5  DAY)), ' 12:00:00'),
+    3, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 9  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 9  DAY)), ' 12:00:00'),
+    5, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 12 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 12 DAY)), ' 12:00:00'),
+    5, 'Aula B-204');
 
--- Slots de cita psicológica (María Psicóloga) — próximas semanas
+-- Slots de cita psicológica (María Psicóloga) — próximas semanas, horas en bloques de 15 min
 INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 1  DAY), DATE_ADD(NOW(), INTERVAL 1  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 3  DAY), DATE_ADD(NOW(), INTERVAL 3  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 6  DAY), DATE_ADD(NOW(), INTERVAL 6  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 8  DAY), DATE_ADD(NOW(), INTERVAL 8  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 10 DAY), DATE_ADD(NOW(), INTERVAL 10 DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3');
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 1  DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 1  DAY)), ' 10:00:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 3  DAY)), ' 10:30:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 3  DAY)), ' 11:30:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 6  DAY)), ' 14:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 6  DAY)), ' 15:00:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 8  DAY)), ' 09:30:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 8  DAY)), ' 10:30:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 10 DAY)), ' 11:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 10 DAY)), ' 12:00:00'),
+    1, 'Consultorio 3');
 
 -- Reservas de asesorías
 INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
@@ -374,19 +401,22 @@ INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
   (2, 7, 'confirmada'),  -- Pedro en asesoría +5 días (slot cap=3, quedan 1)
   (5, 5, 'confirmada');  -- Luis  en cita psicológica +1 día
 
--- Talleres futuros
+-- Talleres futuros — horas en bloques de 15 min
 INSERT IGNORE INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location) VALUES
   (1, 'Taller de Gestión del Tiempo',
    'Estrategias para organizar el estudio universitario', 'Carlos Docente',
-   DATE_ADD(NOW(), INTERVAL 4 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY) + INTERVAL 3 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 4  DAY)), ' 09:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 4  DAY)), ' 12:00:00'),
    30, 'Auditorio Principal'),
   (1, 'Taller de Técnicas de Estudio',
    'Métodos de aprendizaje activo y mapas mentales', 'Dra. Patricia Ríos (externa)',
-   DATE_ADD(NOW(), INTERVAL 11 DAY), DATE_ADD(NOW(), INTERVAL 11 DAY) + INTERVAL 3 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 11 DAY)), ' 14:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 11 DAY)), ' 17:00:00'),
    25, 'Sala de Conferencias B'),
   (1, 'Manejo del Estrés Universitario',
    'Herramientas para afrontar la presión académica', 'María Psicóloga',
-   DATE_ADD(NOW(), INTERVAL 18 DAY), DATE_ADD(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 18 DAY)), ' 10:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 18 DAY)), ' 12:00:00'),
    20, 'Auditorio Principal');
 
 -- Luis inscrito en primer taller

@@ -1,3 +1,12 @@
+// Convierte cualquier string de fecha (incluyendo con offset) a "YYYY-MM-DD HH:MM:SS"
+// que es el formato que acepta MariaDB para columnas DATETIME.
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 const HASH = '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu';
@@ -163,8 +172,22 @@ export async function crearSlot(req, res) {
     const { starts_at, ends_at, location, capacity = 1, student_ids = [] } = req.body;
     if (!starts_at || !ends_at) return res.status(400).json({ error: "Fecha requerida" });
 
-    if (new Date(starts_at) < new Date())
-        return res.status(400).json({ error: "No puedes crear una cita en el pasado" });
+    const ahoraMs = Date.now();
+    const inicioMs = new Date(starts_at).getTime();
+    const finMs = new Date(ends_at).getTime();
+    const UNA_HORA = 60 * 60 * 1000;
+
+    if (inicioMs < ahoraMs - UNA_HORA)
+        return res.status(400).json({ error: "El inicio no puede ser más de 1 hora en el pasado" });
+    if (finMs <= ahoraMs)
+        return res.status(400).json({ error: "La hora de fin ya pasó" });
+    if (finMs <= inicioMs)
+        return res.status(400).json({ error: "El fin debe ser posterior al inicio" });
+
+    // Cita en curso o inmediata (inicio dentro de ±1h): requiere estudiante asignado
+    const esInmediataOEnCurso = inicioMs < ahoraMs + UNA_HORA;
+    if (esInmediataOEnCurso && student_ids.length === 0)
+        return res.status(400).json({ error: "Las citas en curso o dentro de la próxima hora requieren al menos un estudiante asignado" });
 
     if (student_ids.length > capacity)
         return res.status(400).json({ error: `No puedes asignar más alumnos que el cupo (${capacity})` });
@@ -172,7 +195,7 @@ export async function crearSlot(req, res) {
     try {
         const [r] = await pool.query(
             "INSERT INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES (?, 'cita_psicologica', ?, ?, ?, ?)",
-            [req.user.id, starts_at, ends_at, capacity, location ?? null]
+            [req.user.id, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity, location ?? null]
         );
         const slotId = r.insertId;
 
@@ -203,7 +226,7 @@ export async function editarSlot(req, res) {
         if (!slot) return res.status(403).json({ error: "No autorizado" });
         await pool.query(
             "UPDATE slots SET starts_at = ?, ends_at = ?, location = ?, capacity = ? WHERE id = ?",
-            [starts_at, ends_at, location ?? null, capacity ?? 1, req.params.id]
+            [toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), location ?? null, capacity ?? 1, req.params.id]
         );
         res.json({ ok: true });
     } catch (err) {
@@ -245,6 +268,8 @@ export async function eliminarSlot(req, res) {
             );
         }
 
+        // Borrar todas las bookings (incluyendo canceladas) antes de eliminar el slot
+        await pool.query("DELETE FROM slot_bookings WHERE slot_id = ?", [slotId]);
         await pool.query("DELETE FROM slots WHERE id = ?", [slotId]);
         res.json({ ok: true });
     } catch (err) {

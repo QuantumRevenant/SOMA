@@ -1,3 +1,90 @@
+// ── Time helpers ─────────────────────────────────────────────────────────────
+/**
+ * Devuelve un string "YYYY-MM-DDTHH:MM" en hora LOCAL del browser,
+ * compatible con datetime-local. Sin conversión UTC.
+ */
+function toLocalDatetimeValue(date) {
+    const d = new Date(date);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Convierte el valor de un datetime-local ("YYYY-MM-DDTHH:MM") a un string
+ * con offset explícito del timezone local ("YYYY-MM-DDTHH:MM:00±HH:MM").
+ * Así el backend puede parsearlo correctamente sin asumir UTC.
+ */
+function toLocalISOWithOffset(datetimeLocalValue) {
+    if (!datetimeLocalValue) return null;
+    const d = new Date(datetimeLocalValue); // browser lo parsea como local
+    const off = -d.getTimezoneOffset();   // offset en minutos (positivo = adelante de UTC)
+    const sign = off >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(off) % 60).padStart(2, "0");
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:00${sign}${hh}:${mm}`;
+}
+
+/**
+ * Redondea al próximo bloque de 15 min.
+ */
+function redondearA15(date) {
+    const d = new Date(date);
+    const m = d.getMinutes();
+    const resto = m % 15;
+    if (resto !== 0) d.setMinutes(m + (15 - resto));
+    d.setSeconds(0, 0);
+    return d;
+}
+
+/**
+ * Comportamiento Google Calendar:
+ * - Cuando cambia INICIO: mueve FIN manteniendo la duración anterior.
+ * - Cuando cambia FIN: solo actualiza duración interna, inicio no se toca.
+ * - FIN nunca puede ser <= INICIO (se corrige automáticamente).
+ *
+ * @param {string} startsId  id del input datetime-local de inicio
+ * @param {string} endsId    id del input datetime-local de fin
+ * @param {string} trigger   "starts" | "ends"
+ */
+function sincronizarFin(startsId, endsId, trigger) {
+    const startsEl = document.getElementById(startsId);
+    const endsEl = document.getElementById(endsId);
+    if (!startsEl || !endsEl) return;
+
+    const startsVal = startsEl.value;
+    const endsVal = endsEl.value;
+    if (!startsVal) return;
+
+    const startsMs = new Date(startsVal).getTime();
+
+    if (trigger === "starts") {
+        // Calcular duración previa (o usar 60 min si no hay fin)
+        const prevDurMs = (endsVal && new Date(endsVal) > new Date(startsVal))
+            ? (new Date(endsVal).getTime() - startsMs) // duracion anterior antes del cambio
+            : 60 * 60 * 1000;
+        // El fin se mueve: nuevo inicio + duración previa
+        // Necesitamos la duración calculada ANTES de que startsVal cambiara.
+        // La guardamos en el atributo data-dur-ms del endsEl.
+        const durMs = parseInt(endsEl.dataset.durMs) || 60 * 60 * 1000;
+        const newEnds = new Date(startsMs + durMs);
+        endsEl.value = toLocalDatetimeValue(newEnds);
+        endsEl.min = startsVal;
+    } else {
+        // Fin cambió: recalcular duración y guardarla
+        if (endsVal && new Date(endsVal) <= new Date(startsVal)) {
+            // Fin inválido: mover fin a inicio + 15 min
+            const newEnds = new Date(startsMs + 15 * 60 * 1000);
+            endsEl.value = toLocalDatetimeValue(newEnds);
+        }
+        const newDurMs = new Date(endsEl.value).getTime() - startsMs;
+        if (newDurMs > 0) endsEl.dataset.durMs = String(newDurMs);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const API = "/api/psicologo";
 
 async function apiFetch(url, opts = {}) {
@@ -443,8 +530,8 @@ function initPopupEditarCita() {
         if (e.target === popup) popup.classList.remove("active");
     });
     document.getElementById("btn-confirmar-editar-cita").addEventListener("click", async () => {
-        const starts_at = document.getElementById("edit-cita-starts").value;
-        const ends_at = document.getElementById("edit-cita-ends").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("edit-cita-starts").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("edit-cita-ends").value);
         const location = document.getElementById("edit-cita-location").value.trim();
         const capacity = parseInt(document.getElementById("edit-cita-capacity").value) || 1;
         const msg = document.getElementById("msg-editar-cita");
@@ -467,11 +554,33 @@ function initPopupEditarCita() {
 
 function abrirEditarCita({ id, starts, ends, location, capacity, reservada }) {
     citaEditId = id;
-    document.getElementById("edit-cita-starts").value = (starts ?? "").slice(0, 16);
-    document.getElementById("edit-cita-ends").value = (ends ?? "").slice(0, 16);
+
+    const startsEl = document.getElementById("edit-cita-starts");
+    const endsEl = document.getElementById("edit-cita-ends");
+
+    // Poblar con hora local — slice(0,16) da "YYYY-MM-DDTHH:MM" compatible con datetime-local
+    startsEl.value = starts ? starts.slice(0, 16) : "";
+    endsEl.value = ends ? ends.slice(0, 16) : "";
+    endsEl.min = starts ? starts.slice(0, 16) : "";
+
+    // Guardar duración inicial para que al mover inicio se conserve
+    if (starts && ends) {
+        const durMs = new Date(ends).getTime() - new Date(starts).getTime();
+        if (durMs > 0) endsEl.dataset.durMs = String(durMs);
+    }
+
     document.getElementById("edit-cita-location").value = location ?? "";
     document.getElementById("edit-cita-capacity").value = capacity ?? 1;
     document.getElementById("msg-editar-cita").textContent = "";
+
+    // Listeners Google Calendar — limpiar anteriores primero
+    const newStartsEl = startsEl.cloneNode(true);
+    const newEndsEl = endsEl.cloneNode(true);
+    startsEl.parentNode.replaceChild(newStartsEl, startsEl);
+    endsEl.parentNode.replaceChild(newEndsEl, endsEl);
+    newStartsEl.addEventListener("change", () => sincronizarFin("edit-cita-starts", "edit-cita-ends", "starts"));
+    newEndsEl.addEventListener("change", () => sincronizarFin("edit-cita-starts", "edit-cita-ends", "ends"));
+
     document.getElementById("msg-editar-cita-reserva").style.display =
         reservada === "1" ? "" : "none";
     document.getElementById("popup-editar-cita").classList.add("active");
@@ -544,11 +653,17 @@ function initPopupNuevaCita() {
 
     // Abrir
     document.getElementById("btn-nueva-cita").addEventListener("click", () => {
-        const ahora = new Date();
-        ahora.setSeconds(0, 0);
-        const minStr = ahora.toISOString().slice(0, 16);
-        document.getElementById("input-starts").min = minStr;
-        document.getElementById("input-ends").min = minStr;
+        // Preseleccionar siguiente bloque de 15 min
+        const ahora = redondearA15(new Date());
+        const minStr = toLocalDatetimeValue(ahora);
+        const endsEl = document.getElementById("input-ends");
+        const defEnd = new Date(ahora.getTime() + 60 * 60 * 1000); // +1h por defecto
+
+        document.getElementById("input-starts").value = minStr;
+        // Sin min: permitimos hasta 1h atrás para registrar citas en curso
+        endsEl.value = toLocalDatetimeValue(defEnd);
+        endsEl.min = minStr;
+        endsEl.dataset.durMs = String(60 * 60 * 1000);
         document.getElementById("input-capacity").value = "1";
         document.getElementById("msg-nueva-cita").textContent = "";
         alumnosSeleccionados = [];
@@ -560,6 +675,14 @@ function initPopupNuevaCita() {
         popup.classList.add("active");
     });
 
+    // Comportamiento Google Calendar
+    document.getElementById("input-starts").addEventListener("change", () =>
+        sincronizarFin("input-starts", "input-ends", "starts")
+    );
+    document.getElementById("input-ends").addEventListener("change", () =>
+        sincronizarFin("input-starts", "input-ends", "ends")
+    );
+
     document.getElementById("close-popup-cita").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
@@ -568,15 +691,29 @@ function initPopupNuevaCita() {
 
     // Guardar
     document.getElementById("btn-confirmar-cita").addEventListener("click", async () => {
-        const starts_at = document.getElementById("input-starts").value;
-        const ends_at = document.getElementById("input-ends").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("input-starts").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("input-ends").value);
         const location = document.getElementById("input-location").value.trim();
         const capacity = parseInt(document.getElementById("input-capacity").value) || 1;
         const msg = document.getElementById("msg-nueva-cita");
 
         if (!starts_at || !ends_at) { msg.textContent = "Completa las fechas."; return; }
-        if (new Date(starts_at) < new Date()) { msg.textContent = "La fecha de inicio no puede ser en el pasado."; return; }
-        if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+
+        const ahoraMs = Date.now();
+        const inicioMs = new Date(starts_at).getTime();
+        const finMs = new Date(ends_at).getTime();
+        const UNA_HORA = 60 * 60 * 1000;
+
+        if (inicioMs < ahoraMs - UNA_HORA) { msg.textContent = "El inicio no puede ser más de 1 hora en el pasado."; return; }
+        if (finMs <= ahoraMs) { msg.textContent = "La cita ya habrá terminado. Ajusta la hora de fin."; return; }
+        if (finMs <= inicioMs) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+
+        // Cita en curso o inmediata: inicio dentro de ±1h respecto a ahora
+        const esInmediataOEnCurso = inicioMs < ahoraMs + UNA_HORA;
+        if (esInmediataOEnCurso && alumnosSeleccionados.length === 0) {
+            msg.textContent = "Las citas en curso o dentro de la próxima hora requieren al menos un estudiante asignado.";
+            return;
+        }
 
         const res = await apiFetch(`${API}/citas`, {
             method: "POST",
