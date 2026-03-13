@@ -7,9 +7,8 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
-    timezone: "+00:00",  // DATETIME en MariaDB no tiene zona → tratarlo como UTC puro
-    dateStrings: true,      // Devolver fechas como "YYYY-MM-DD HH:MM:SS" en vez de Date objects
-    // Evita que JSON.stringify convierta a UTC y desfase la hora en Lima
+    // Sin dateStrings ni timezone: mysql2 devuelve objetos Date que JSON.stringify
+    // serializa como ISO UTC ("...Z"), el frontend los parsea correctamente sin conversión
 });
 
 export default pool;

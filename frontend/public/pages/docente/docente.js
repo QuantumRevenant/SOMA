@@ -1,3 +1,53 @@
+// ── Time helpers ─────────────────────────────────────────────────────────────
+function toLocalDatetimeValue(date) {
+    const d = new Date(date);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toLocalISOWithOffset(datetimeLocalValue) {
+    if (!datetimeLocalValue) return null;
+    const d = new Date(datetimeLocalValue);
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(off) % 60).padStart(2, "0");
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:00${sign}${hh}:${mm}`;
+}
+
+function redondearA15(date) {
+    const d = new Date(date);
+    const m = d.getMinutes();
+    const resto = m % 15;
+    if (resto !== 0) d.setMinutes(m + (15 - resto));
+    d.setSeconds(0, 0);
+    return d;
+}
+
+function sincronizarFin(startsId, endsId, trigger) {
+    const startsEl = document.getElementById(startsId);
+    const endsEl = document.getElementById(endsId);
+    if (!startsEl || !endsEl) return;
+    const startsVal = startsEl.value;
+    const endsVal = endsEl.value;
+    if (!startsVal) return;
+    const startsMs = new Date(startsVal).getTime();
+    if (trigger === "starts") {
+        const durMs = parseInt(endsEl.dataset.durMs) || 2 * 60 * 60 * 1000;
+        endsEl.value = toLocalDatetimeValue(new Date(startsMs + durMs));
+        endsEl.min = startsVal;
+    } else {
+        if (endsVal && new Date(endsVal) <= new Date(startsVal)) {
+            endsEl.value = toLocalDatetimeValue(new Date(startsMs + 15 * 60 * 1000));
+        }
+        const newDurMs = new Date(endsEl.value).getTime() - startsMs;
+        if (newDurMs > 0) endsEl.dataset.durMs = String(newDurMs);
+    }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const API = "/api/docente";
 let seccionesCache = [];
 
@@ -8,6 +58,7 @@ async function apiFetch(url, opts = {}) {
 }
 
 function fmt(dt) {
+    if (!dt) return "—";
     return new Date(dt).toLocaleString("es-PE", {
         day: "2-digit", month: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit"
@@ -619,11 +670,13 @@ function initPopupNuevaAsesoria() {
 
     // ── Abrir popup ──
     document.getElementById("btn-nueva-asesoria").addEventListener("click", async () => {
-        const ahora = new Date();
-        ahora.setSeconds(0, 0);
-        const minStr = ahora.toISOString().slice(0, 16);
-        document.getElementById("asesoria-inicio").min = minStr;
-        document.getElementById("asesoria-fin").min = minStr;
+        const ahora = redondearA15(new Date());
+        const minStr = toLocalDatetimeValue(ahora);
+        const endsEl = document.getElementById("asesoria-fin");
+        document.getElementById("asesoria-inicio").value = minStr;
+        endsEl.value = toLocalDatetimeValue(new Date(ahora.getTime() + 2 * 60 * 60 * 1000));
+        endsEl.min = minStr;
+        endsEl.dataset.durMs = String(2 * 60 * 60 * 1000);
         document.getElementById("msg-nueva-asesoria").textContent = "";
         alumnosSeleccionados = [];
         inputBuscar.value = "";
@@ -637,6 +690,11 @@ function initPopupNuevaAsesoria() {
         popup.classList.add("active");
     });
 
+
+    document.getElementById("asesoria-inicio").addEventListener("change", () =>
+        sincronizarFin("asesoria-inicio", "asesoria-fin", "starts"));
+    document.getElementById("asesoria-fin").addEventListener("change", () =>
+        sincronizarFin("asesoria-inicio", "asesoria-fin", "ends"));
     document.getElementById("close-popup-nueva-asesoria").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
@@ -645,15 +703,20 @@ function initPopupNuevaAsesoria() {
 
     // ── Guardar ──
     document.getElementById("btn-guardar-asesoria").addEventListener("click", async () => {
-        const starts_at = document.getElementById("asesoria-inicio").value;
-        const ends_at = document.getElementById("asesoria-fin").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("asesoria-inicio").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("asesoria-fin").value);
         const capacity = document.getElementById("asesoria-cupo").value;
         const location = document.getElementById("asesoria-lugar").value;
         const msg = document.getElementById("msg-nueva-asesoria");
 
         if (!starts_at || !ends_at) { msg.textContent = "Complete fecha de inicio y fin."; return; }
-        if (new Date(starts_at) < new Date()) { msg.textContent = "La fecha de inicio no puede ser en el pasado."; return; }
-        if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+        const ahoraMs = Date.now();
+        const inicioMs = new Date(starts_at).getTime();
+        const finMs = new Date(ends_at).getTime();
+        const UNA_HORA = 60 * 60 * 1000;
+        if (inicioMs < ahoraMs - UNA_HORA) { msg.textContent = "El inicio no puede ser más de 1 hora en el pasado."; return; }
+        if (finMs <= ahoraMs) { msg.textContent = "La asesoría ya habrá terminado. Ajusta la hora de fin."; return; }
+        if (finMs <= inicioMs) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
 
         // Crear el slot con todos los alumnos de una sola vez
         const res = await apiFetch(`${API}/asesorias`, {
@@ -736,8 +799,8 @@ function initPopupEditarAsesoria() {
         if (e.target === popup) popup.classList.remove("active");
     });
     document.getElementById("btn-confirmar-editar-asesoria").addEventListener("click", async () => {
-        const starts_at = document.getElementById("edit-asesoria-inicio").value;
-        const ends_at = document.getElementById("edit-asesoria-fin").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("edit-asesoria-inicio").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("edit-asesoria-fin").value);
         const capacity = document.getElementById("edit-asesoria-cupo").value;
         const location = document.getElementById("edit-asesoria-lugar").value;
         const msg = document.getElementById("msg-editar-asesoria");
@@ -759,8 +822,22 @@ function initPopupEditarAsesoria() {
 
 function abrirEditarAsesoria({ id, starts, ends, capacity, location, reservas }) {
     asesoriaEditId = id;
-    document.getElementById("edit-asesoria-inicio").value = (starts ?? "").slice(0, 16);
-    document.getElementById("edit-asesoria-fin").value = (ends ?? "").slice(0, 16);
+    const editStartsEl = document.getElementById("edit-asesoria-inicio");
+    const editEndsEl = document.getElementById("edit-asesoria-fin");
+    // slice(0,16) da "YYYY-MM-DD HH:MM" — el datetime-local lo acepta directo sin parsear
+    editStartsEl.value = starts ? starts.slice(0, 16) : "";
+    editEndsEl.value = ends ? ends.slice(0, 16) : "";
+    editEndsEl.min = starts ? starts.slice(0, 16) : "";
+    if (starts && ends) {
+        const durMs = new Date(ends.replace(" ", "T")).getTime() - new Date(starts.replace(" ", "T")).getTime();
+        if (durMs > 0) editEndsEl.dataset.durMs = String(durMs);
+    }
+    const newSt = editStartsEl.cloneNode(true);
+    const newEn = editEndsEl.cloneNode(true);
+    editStartsEl.parentNode.replaceChild(newSt, editStartsEl);
+    editEndsEl.parentNode.replaceChild(newEn, editEndsEl);
+    newSt.addEventListener("change", () => sincronizarFin("edit-asesoria-inicio", "edit-asesoria-fin", "starts"));
+    newEn.addEventListener("change", () => sincronizarFin("edit-asesoria-inicio", "edit-asesoria-fin", "ends"));
     document.getElementById("edit-asesoria-cupo").value = capacity ?? 5;
     document.getElementById("edit-asesoria-lugar").value = location ?? "";
     document.getElementById("msg-editar-asesoria").textContent = "";

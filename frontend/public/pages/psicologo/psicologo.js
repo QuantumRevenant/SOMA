@@ -131,6 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.querySelectorAll(".content-section").forEach(s => s.classList.remove("active"));
             btn.classList.add("active");
             document.getElementById(btn.dataset.tab).classList.add("active");
+            // Recargar datos al cambiar de pestaña
+            if (btn.dataset.tab === "estudiantes") cargarEstudiantes();
+            if (btn.dataset.tab === "citas") cargarCitas();
+            if (btn.dataset.tab === "calendario") cargarCalendario();
         });
     });
 
@@ -558,14 +562,14 @@ function abrirEditarCita({ id, starts, ends, location, capacity, reservada }) {
     const startsEl = document.getElementById("edit-cita-starts");
     const endsEl = document.getElementById("edit-cita-ends");
 
-    // Poblar con hora local — slice(0,16) da "YYYY-MM-DDTHH:MM" compatible con datetime-local
+    // slice(0,16) da "YYYY-MM-DD HH:MM" — el datetime-local lo acepta directo sin parsear
     startsEl.value = starts ? starts.slice(0, 16) : "";
     endsEl.value = ends ? ends.slice(0, 16) : "";
     endsEl.min = starts ? starts.slice(0, 16) : "";
 
     // Guardar duración inicial para que al mover inicio se conserve
     if (starts && ends) {
-        const durMs = new Date(ends).getTime() - new Date(starts).getTime();
+        const durMs = new Date(ends.replace(" ", "T")).getTime() - new Date(starts.replace(" ", "T")).getTime();
         if (durMs > 0) endsEl.dataset.durMs = String(durMs);
     }
 

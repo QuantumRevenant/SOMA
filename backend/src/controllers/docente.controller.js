@@ -1,3 +1,11 @@
+// Convierte string de fecha con offset a "YYYY-MM-DD HH:MM:SS" para MariaDB DATETIME
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 // ── Secciones ─────────────────────────────────────────────────────────────────
@@ -335,7 +343,7 @@ export async function getMisAsesorias(req, res) {
       LEFT JOIN slot_bookings sb ON sb.slot_id = s.id AND sb.status != 'cancelada'
       WHERE s.owner_id = ? AND s.type = 'asesoria'
       GROUP BY s.id
-      ORDER BY s.starts_at DESC
+      ORDER BY s.starts_at ASC
     `, [req.user.id]);
         res.json(rows);
     } catch (err) {
@@ -350,8 +358,16 @@ export async function createAsesoria(req, res) {
     if (!starts_at || !ends_at)
         return res.status(400).json({ error: "Fecha de inicio y fin requeridas" });
 
-    if (new Date(starts_at) < new Date())
-        return res.status(400).json({ error: "No puedes crear una asesoría en el pasado" });
+    const ahoraMs = Date.now();
+    const inicioMs = new Date(starts_at).getTime();
+    const finMs = new Date(ends_at).getTime();
+    const UNA_HORA = 60 * 60 * 1000;
+    if (inicioMs < ahoraMs - UNA_HORA)
+        return res.status(400).json({ error: "El inicio no puede ser más de 1 hora en el pasado" });
+    if (finMs <= ahoraMs)
+        return res.status(400).json({ error: "La hora de fin ya pasó" });
+    if (finMs <= inicioMs)
+        return res.status(400).json({ error: "El fin debe ser posterior al inicio" });
 
     if (student_ids.length > capacity)
         return res.status(400).json({ error: `No puedes asignar más alumnos que el cupo (${capacity})` });
@@ -359,7 +375,7 @@ export async function createAsesoria(req, res) {
     try {
         const [result] = await pool.query(
             "INSERT INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES (?, 'asesoria', ?, ?, ?, ?)",
-            [req.user.id, starts_at, ends_at, capacity, location ?? null]
+            [req.user.id, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity, location ?? null]
         );
         const slotId = result.insertId;
 
@@ -390,7 +406,7 @@ export async function editarAsesoria(req, res) {
         if (check.length === 0) return res.status(403).json({ error: "No autorizado" });
         await pool.query(
             "UPDATE slots SET starts_at = ?, ends_at = ?, capacity = ?, location = ? WHERE id = ?",
-            [starts_at, ends_at, capacity ?? 5, location ?? null, req.params.id]
+            [toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity ?? 5, location ?? null, req.params.id]
         );
         res.json({ ok: true });
     } catch (err) {
