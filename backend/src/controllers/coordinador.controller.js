@@ -1,3 +1,11 @@
+// Convierte string de fecha con offset a "YYYY-MM-DD HH:MM:SS" para MariaDB DATETIME
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 // Helper: verifica que el coordinador tenga acceso al curso
@@ -318,7 +326,7 @@ export async function getTalleres(req, res) {
       LEFT JOIN workshop_enrollments we ON we.workshop_id = w.id
       WHERE w.coordinator_id = ?
       GROUP BY w.id
-      ORDER BY w.starts_at DESC
+      ORDER BY w.starts_at ASC
     `, [coordId]);
         res.json(talleres);
     } catch (err) {
@@ -335,7 +343,7 @@ export async function crearTaller(req, res) {
             `INSERT INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location)
        VALUES (?,?,?,?,?,?,?,?)`,
             [req.user.id, title, description ?? null, expositor ?? null,
-                starts_at, ends_at, capacity ?? 30, location ?? null]
+            toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity ?? 30, location ?? null]
         );
         res.json({ ok: true, id: r.insertId });
     } catch (err) {
@@ -349,7 +357,7 @@ export async function editarTaller(req, res) {
         const [r] = await pool.query(
             `UPDATE workshops SET title=?, description=?, expositor=?, starts_at=?, ends_at=?, capacity=?, location=?
        WHERE id=? AND coordinator_id=?`,
-            [title, description ?? null, expositor ?? null, starts_at, ends_at,
+            [title, description ?? null, expositor ?? null, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at),
                 capacity ?? 30, location ?? null, req.params.id, req.user.id]
         );
         if (r.affectedRows === 0) return res.status(403).json({ error: "No autorizado" });

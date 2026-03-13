@@ -1,3 +1,53 @@
+// ── Time helpers ─────────────────────────────────────────────────────────────
+function toLocalDatetimeValue(date) {
+    const d = new Date(date);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toLocalISOWithOffset(datetimeLocalValue) {
+    if (!datetimeLocalValue) return null;
+    const d = new Date(datetimeLocalValue);
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(off) % 60).padStart(2, "0");
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:00${sign}${hh}:${mm}`;
+}
+
+function redondearA15(date) {
+    const d = new Date(date);
+    const m = d.getMinutes();
+    const resto = m % 15;
+    if (resto !== 0) d.setMinutes(m + (15 - resto));
+    d.setSeconds(0, 0);
+    return d;
+}
+
+function sincronizarFin(startsId, endsId, trigger) {
+    const startsEl = document.getElementById(startsId);
+    const endsEl = document.getElementById(endsId);
+    if (!startsEl || !endsEl) return;
+    const startsVal = startsEl.value;
+    const endsVal = endsEl.value;
+    if (!startsVal) return;
+    const startsMs = new Date(startsVal).getTime();
+    if (trigger === "starts") {
+        const durMs = parseInt(endsEl.dataset.durMs) || 2 * 60 * 60 * 1000;
+        endsEl.value = toLocalDatetimeValue(new Date(startsMs + durMs));
+        endsEl.min = startsVal;
+    } else {
+        if (endsVal && new Date(endsVal) <= new Date(startsVal)) {
+            endsEl.value = toLocalDatetimeValue(new Date(startsMs + 15 * 60 * 1000));
+        }
+        const newDurMs = new Date(endsEl.value).getTime() - startsMs;
+        if (newDurMs > 0) endsEl.dataset.durMs = String(newDurMs);
+    }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const API = "/api/coordinador";
 
 async function apiFetch(url, opts = {}) {
@@ -363,12 +413,24 @@ function initTalleres() {
     document.getElementById("btn-nuevo-taller").addEventListener("click", () => {
         tallerEditId = null;
         document.getElementById("taller-popup-titulo").textContent = "Nuevo taller";
-        ["tal-title", "tal-desc", "tal-expositor", "tal-starts", "tal-ends", "tal-location"].forEach(id =>
+        ["tal-title", "tal-desc", "tal-expositor", "tal-location"].forEach(id =>
             document.getElementById(id).value = "");
+        // Preseleccionar siguiente bloque de 15 min
+        const ahora = redondearA15(new Date());
+        const endsEl = document.getElementById("tal-ends");
+        document.getElementById("tal-starts").value = toLocalDatetimeValue(ahora);
+        endsEl.value = toLocalDatetimeValue(new Date(ahora.getTime() + 2 * 60 * 60 * 1000));
+        endsEl.dataset.durMs = String(2 * 60 * 60 * 1000);
         document.getElementById("tal-capacity").value = "30";
         document.getElementById("msg-taller").textContent = "";
         pp.classList.add("active");
     });
+
+    // Google Calendar: listeners de sincronización
+    document.getElementById("tal-starts").addEventListener("change", () =>
+        sincronizarFin("tal-starts", "tal-ends", "starts"));
+    document.getElementById("tal-ends").addEventListener("change", () =>
+        sincronizarFin("tal-starts", "tal-ends", "ends"));
     document.getElementById("close-popup-taller").addEventListener("click", () => pp.classList.remove("active"));
     pp.addEventListener("click", e => { if (e.target === pp) pp.classList.remove("active"); });
 
@@ -385,13 +447,19 @@ async function guardarTaller() {
         title: document.getElementById("tal-title").value.trim(),
         description: document.getElementById("tal-desc").value.trim() || null,
         expositor: document.getElementById("tal-expositor").value.trim() || null,
-        starts_at: document.getElementById("tal-starts").value,
-        ends_at: document.getElementById("tal-ends").value,
+        starts_at: toLocalISOWithOffset(document.getElementById("tal-starts").value),
+        ends_at: toLocalISOWithOffset(document.getElementById("tal-ends").value),
         capacity: +document.getElementById("tal-capacity").value || 30,
         location: document.getElementById("tal-location").value.trim() || null,
     };
     const msg = document.getElementById("msg-taller");
     if (!body.title || !body.starts_at || !body.ends_at) { msg.textContent = "Completa los campos requeridos."; return; }
+    const ahoraMs = Date.now();
+    const inicioMs = new Date(body.starts_at).getTime();
+    const finMs = new Date(body.ends_at).getTime();
+    if (inicioMs < ahoraMs) { msg.textContent = "El inicio no puede ser en el pasado."; return; }
+    if (finMs <= ahoraMs) { msg.textContent = "El fin ya pasó."; return; }
+    if (finMs <= inicioMs) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
 
     const url = tallerEditId ? `${API}/talleres/${tallerEditId}` : `${API}/talleres`;
     const method = tallerEditId ? "PUT" : "POST";
@@ -455,7 +523,20 @@ async function cargarTalleres() {
             document.getElementById("tal-desc").value = t.description ?? "";
             document.getElementById("tal-expositor").value = t.expositor ?? "";
             document.getElementById("tal-starts").value = t.starts_at?.slice(0, 16);
-            document.getElementById("tal-ends").value = t.ends_at?.slice(0, 16);
+            const talEndsEl = document.getElementById("tal-ends");
+            talEndsEl.value = t.ends_at?.slice(0, 16);
+            talEndsEl.min = t.starts_at?.slice(0, 16);
+            if (t.starts_at && t.ends_at) {
+                const durMs = new Date(t.ends_at.replace(" ", "T")).getTime() - new Date(t.starts_at.replace(" ", "T")).getTime();
+                if (durMs > 0) talEndsEl.dataset.durMs = String(durMs);
+            }
+            // Limpiar listeners anteriores y re-asignar
+            const newSt = document.getElementById("tal-starts").cloneNode(true);
+            const newEn = talEndsEl.cloneNode(true);
+            document.getElementById("tal-starts").parentNode.replaceChild(newSt, document.getElementById("tal-starts"));
+            talEndsEl.parentNode.replaceChild(newEn, talEndsEl);
+            newSt.addEventListener("change", () => sincronizarFin("tal-starts", "tal-ends", "starts"));
+            newEn.addEventListener("change", () => sincronizarFin("tal-starts", "tal-ends", "ends"));
             document.getElementById("tal-capacity").value = t.capacity;
             document.getElementById("tal-location").value = t.location ?? "";
             document.getElementById("msg-taller").textContent = "";
