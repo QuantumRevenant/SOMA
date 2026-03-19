@@ -239,7 +239,10 @@ INSERT IGNORE INTO users (email, password, role, full_name) VALUES
   ('psicologo@soma.edu',   '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'psicologo',    'María Psicóloga'),
   ('estudiante@soma.edu',  '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Luis Estudiante'),
   ('estudiante2@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Ana Estudiante'),
-  ('estudiante3@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Pedro Estudiante');
+  ('estudiante3@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Pedro Estudiante'),
+  ('estudiante4@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Carla Estudiante'),
+  ('estudiante5@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Jorge Estudiante'),
+  ('estudiante6@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Sofía Estudiante');
 
 -- Periodos: uno pasado, uno activo
 INSERT IGNORE INTO periods (year, type, label, is_active, starts_at, ends_at) VALUES
@@ -393,13 +396,59 @@ INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location
     CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 10 DAY)), ' 12:00:00'),
     1, 'Consultorio 3');
 
+-- Slots pasados para testear agrupación temporal del psicólogo
+INSERT IGNORE INTO slots (id, owner_id, type, starts_at, ends_at, capacity, location) VALUES
+  -- Último mes: ~5 días atrás
+  (20, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 5  DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 5  DAY)), ' 10:00:00'),
+    1, 'Consultorio 3'),
+  -- Último mes: ~15 días atrás
+  (21, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 15 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 15 DAY)), ' 11:00:00'),
+    1, 'Consultorio 3'),
+  -- Último mes: ~25 días atrás
+  (22, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 25 DAY)), ' 11:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 25 DAY)), ' 12:00:00'),
+    1, 'Consultorio 3'),
+  -- Últimos 3 meses: ~45 días atrás
+  (23, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 45 DAY)), ' 14:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 45 DAY)), ' 15:00:00'),
+    1, 'Consultorio 3'),
+  -- Últimos 3 meses: ~75 días atrás
+  (24, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 75 DAY)), ' 09:30:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 75 DAY)), ' 10:30:00'),
+    1, 'Consultorio 3'),
+  -- Más de 3 meses: ~120 días atrás
+  (25, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 120 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 120 DAY)), ' 11:00:00'),
+    1, 'Consultorio 3'),
+  -- Más de 3 meses: ~200 días atrás
+  (26, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 200 DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 200 DAY)), ' 10:00:00'),
+    1, 'Consultorio 3');
+
 -- Reservas de asesorías
 INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
   (1, 5, 'confirmada'),  -- Luis  en asesoría +2 días (slot cap=2, quedan 1)
   (1, 6, 'confirmada'),  -- Ana   en asesoría +2 días (slot cap=2, LLENO)
   (2, 5, 'confirmada'),  -- Luis  en asesoría +5 días (slot cap=3, quedan 1)
   (2, 7, 'confirmada'),  -- Pedro en asesoría +5 días (slot cap=3, quedan 1)
-  (5, 5, 'confirmada');  -- Luis  en cita psicológica +1 día
+  (5, 5, 'confirmada'),  -- Luis  en cita psicológica +1 día
+  -- Seeds temporales pasados (IDs 5=Luis, 6=Ana, 7=Pedro, 8=Carla, 9=Jorge, 10=Sofía)
+  (20, 5, 'confirmada'), -- Luis   hace  5 días  → último mes
+  (21, 6, 'confirmada'), -- Ana    hace 15 días  → último mes
+  (22, 8, 'confirmada'), -- Carla  hace 25 días  → último mes
+  (23, 7, 'confirmada'), -- Pedro  hace 45 días  → últimos 3 meses
+  (24, 9, 'confirmada'), -- Jorge  hace 75 días  → últimos 3 meses
+  (25, 10,'confirmada'), -- Sofía  hace 120 días → más de 3 meses
+  (26, 8, 'confirmada'); -- Carla  hace 200 días → más de 3 meses (segunda cita)
 
 -- Talleres futuros — horas en bloques de 15 min
 INSERT IGNORE INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location) VALUES

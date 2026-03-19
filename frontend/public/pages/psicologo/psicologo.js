@@ -228,47 +228,81 @@ async function cargarEstudiantes() {
     if (!data) return;
     estudiantesData = data;
 
-    const proxWrap = document.getElementById("proxima-cita-wrap");
-    if (data.proxima) {
-        proxWrap.style.display = "";
-        document.getElementById("proxima-cita-card").innerHTML = `
-            <div class="estudiante-card estudiante-proxima" data-id="${data.proxima.id}"
-                data-nombre="${data.proxima.full_name}" data-email="${data.proxima.email}">
-                <div>
-                    <div class="est-nombre">${data.proxima.full_name}</div>
-                    <div class="est-info">${data.proxima.email}</div>
-                </div>
-                <div style="text-align:right">
-                    <div style="font-size:13px;font-weight:700;color:#ff6b6b">${fmt(data.proxima.proxima_cita)}</div>
-                    <div style="font-size:11px;color:#999">Próxima cita</div>
-                </div>
-            </div>`;
+    // ── Próximas 24h ─────────────────────────────────────────────────────────
+    const wrap24 = document.getElementById("proximas24h-wrap");
+    if (data.proximas24h.length > 0) {
+        wrap24.style.display = "";
+        document.getElementById("lista-proximas24h").innerHTML =
+            data.proximas24h.map(e => buildEstCard(e, e.proxima_cita, "Próxima cita", true)).join("");
     } else {
-        proxWrap.style.display = "none";
+        wrap24.style.display = "none";
     }
 
-    const lista = document.getElementById("lista-historial");
-    if (data.conHistorial.length === 0) {
-        lista.innerHTML = "<p style='color:#999'>No hay estudiantes atendidos aún.</p>";
-        return;
-    }
-    lista.innerHTML = data.conHistorial.map(e => `
-        <div class="estudiante-card" data-id="${e.id}"
-            data-nombre="${e.full_name}" data-email="${e.email}">
+    // ── Próximas futuras (>24h) y grupos de historial ────────────────────────
+    const grupos = { mes: [], trimestre: [], anterior: [] };
+    data.conHistorial.forEach(e => grupos[e.grupo]?.push(e));
+
+    const hayAlguien = data.proximas24h.length > 0 || data.proximasFuturas.length > 0 || data.conHistorial.length > 0;
+    document.getElementById("sin-historial").style.display = hayAlguien ? "none" : "";
+
+    renderSeccion("proximas-futuras-wrap", "lista-proximas-futuras", "count-proxfut",
+        data.proximasFuturas, e => buildEstCard(e, e.proxima_cita, "Próxima cita"), false);
+    renderSeccion("grupo-mes-wrap", "lista-grupo-mes", "count-mes",
+        grupos.mes, e => buildEstCard(e, e.ultima_cita, sublabel(e)), false);
+    renderSeccion("grupo-trimestre-wrap", "lista-grupo-trimestre", "count-trimestre",
+        grupos.trimestre, e => buildEstCard(e, e.ultima_cita, sublabel(e)), false);
+    renderSeccion("grupo-anterior-wrap", "lista-grupo-anterior", "count-anterior",
+        grupos.anterior, e => buildEstCard(e, e.ultima_cita, sublabel(e)), true);
+
+    // Inicializar toggles (genérico, solo una vez por sección)
+    document.querySelectorAll(".section-toggle").forEach(header => {
+        if (header.dataset.bound) return;
+        header.dataset.bound = "1";
+        header.addEventListener("click", () => {
+            const lista = document.getElementById(header.dataset.target);
+            const icon = document.getElementById(header.dataset.icon);
+            if (!lista) return;
+            const open = lista.style.display !== "none";
+            lista.style.display = open ? "none" : "";
+            icon.textContent = open ? "▶" : "▼";
+        });
+    });
+
+    // Bind clicks en todas las cards
+    document.querySelectorAll(".estudiante-card[data-id]").forEach(card => {
+        card.addEventListener("click", () =>
+            abrirPerfilEstudiante(card.dataset.id, card.dataset.nombre, card.dataset.email));
+    });
+}
+
+function sublabel(e) {
+    return `${e.total_citas} cita${e.total_citas !== 1 ? "s" : ""}`;
+}
+
+function renderSeccion(wrapId, listaId, countId, items, buildFn, defaultClosed) {
+    const wrap = document.getElementById(wrapId);
+    const lista = document.getElementById(listaId);
+    const count = document.getElementById(countId);
+    if (!items || items.length === 0) { wrap.style.display = "none"; return; }
+    wrap.style.display = "";
+    lista.innerHTML = items.map(buildFn).join("");
+    if (count) count.textContent = `(${items.length})`;
+    if (defaultClosed) lista.style.display = "none";
+}
+
+function buildEstCard(e, fechaLabel, subLabel, highlight = false) {
+    return `
+        <div class="estudiante-card ${highlight ? "estudiante-proxima" : ""}"
+            data-id="${e.id}" data-nombre="${e.full_name}" data-email="${e.email}">
             <div>
                 <div class="est-nombre">${e.full_name}</div>
                 <div class="est-info">${e.email}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
-                <div style="font-size:12px;color:#666">Última cita: ${fmtFecha(e.ultima_cita)}</div>
-                <div style="font-size:12px;color:#999">${e.total_citas} cita${e.total_citas !== 1 ? "s" : ""}</div>
+                <div style="font-size:13px;font-weight:700;color:${highlight ? "#ff6b6b" : "#374151"}">${fmt(fechaLabel)}</div>
+                <div style="font-size:11px;color:#999">${subLabel}</div>
             </div>
-        </div>`).join("");
-
-    document.querySelectorAll(".estudiante-card[data-id]").forEach(card => {
-        card.addEventListener("click", () =>
-            abrirPerfilEstudiante(card.dataset.id, card.dataset.nombre, card.dataset.email));
-    });
+        </div>`;
 }
 
 // ── Popup Perfil ──────────────────────────────────────────────────────────────

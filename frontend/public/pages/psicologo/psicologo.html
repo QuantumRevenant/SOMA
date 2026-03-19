@@ -36,13 +36,51 @@
         <input type="text" id="input-buscar" placeholder="Buscar estudiante por nombre o email..." autocomplete="off">
         <div id="search-results" class="search-dropdown"></div>
       </div>
-      <div id="proxima-cita-wrap" style="display:none">
-        <h3 class="section-label">🔔 Próxima cita</h3>
-        <div id="proxima-cita-card"></div>
+
+      <!-- Próximas 24h — siempre expandido -->
+      <div id="proximas24h-wrap" style="display:none;margin-bottom:20px">
+        <h3 class="section-label">🔔 Próximas 24 horas</h3>
+        <div id="lista-proximas24h"></div>
       </div>
-      <div id="historial-wrap">
-        <h3 class="section-label">📋 Estudiantes atendidos</h3>
-        <div id="lista-historial"><p style="color:#999">Cargando...</p></div>
+
+      <!-- Próximas citas (>24h) — colapsable -->
+      <div id="proximas-futuras-wrap" style="display:none;margin-bottom:20px">
+        <h3 class="section-label section-toggle" data-target="lista-proximas-futuras" data-icon="icon-proxfut" style="cursor:pointer;user-select:none">
+          📆 Próximas citas <span id="icon-proxfut">▼</span>
+          <span id="count-proxfut" class="section-count"></span>
+        </h3>
+        <div id="lista-proximas-futuras"></div>
+      </div>
+
+      <!-- Último mes — colapsable -->
+      <div id="grupo-mes-wrap" style="display:none;margin-bottom:20px">
+        <h3 class="section-label section-toggle" data-target="lista-grupo-mes" data-icon="icon-mes" style="cursor:pointer;user-select:none">
+          📅 Último mes <span id="icon-mes">▼</span>
+          <span id="count-mes" class="section-count"></span>
+        </h3>
+        <div id="lista-grupo-mes"></div>
+      </div>
+
+      <!-- Últimos 3 meses — colapsable -->
+      <div id="grupo-trimestre-wrap" style="display:none;margin-bottom:20px">
+        <h3 class="section-label section-toggle" data-target="lista-grupo-trimestre" data-icon="icon-trimestre" style="cursor:pointer;user-select:none">
+          🗓 Últimos 3 meses <span id="icon-trimestre">▼</span>
+          <span id="count-trimestre" class="section-count"></span>
+        </h3>
+        <div id="lista-grupo-trimestre"></div>
+      </div>
+
+      <!-- Más de 3 meses — colapsable, cerrado por defecto -->
+      <div id="grupo-anterior-wrap" style="display:none;margin-bottom:20px">
+        <h3 class="section-label section-toggle" data-target="lista-grupo-anterior" data-icon="icon-anterior" style="cursor:pointer;user-select:none">
+          📂 Más de 3 meses <span id="icon-anterior">▶</span>
+          <span id="count-anterior" class="section-count"></span>
+        </h3>
+        <div id="lista-grupo-anterior" style="display:none"></div>
+      </div>
+
+      <div id="sin-historial" style="display:none">
+        <p style="color:#999">No hay estudiantes atendidos aún.</p>
       </div>
     </div>
 
@@ -197,6 +235,7 @@
   </div>
 
   <script type="module" src="/pages/psicologo/psicologo.js"></script>
+
   <script src="../../js/config.js"></script>
   <script src="../../js/chat-widget.js"></script>
 </body>
