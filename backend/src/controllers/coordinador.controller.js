@@ -117,10 +117,14 @@ export async function getAlumnos(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score * (ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia,
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia,
         COUNT(DISTINCT e.id) AS cursos_activos
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
@@ -130,7 +134,6 @@ export async function getAlumnos(req, res) {
       JOIN users u            ON u.id  = e.student_id ${extra}
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE cc.coordinator_id = ?
       GROUP BY u.id
       ORDER BY u.full_name
@@ -169,10 +172,14 @@ export async function getPerfilAlumno(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score*(ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM enrollments e
       JOIN course_sections cs ON cs.id = e.course_section_id
       JOIN courses c          ON c.id  = cs.course_id
@@ -180,7 +187,6 @@ export async function getPerfilAlumno(req, res) {
       JOIN users u            ON u.id  = cs.docente_id
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE e.student_id = ?
       GROUP BY e.id
     `, [studentId]);
@@ -439,10 +445,14 @@ export async function getReporteAsistencia(req, res) {
         SUM(CASE WHEN a.status = 'presente'  THEN 1 ELSE 0 END) AS presentes,
         SUM(CASE WHEN a.status = 'tardanza'  THEN 1 ELSE 0 END) AS tardanzas,
         SUM(CASE WHEN a.status = 'ausente'   THEN 1 ELSE 0 END) AS ausentes,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
       JOIN course_sections cs ON cs.course_id = c.id
@@ -500,10 +510,14 @@ export async function getAlertas(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score*(ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
       JOIN course_sections cs ON cs.course_id = c.id
@@ -512,7 +526,6 @@ export async function getAlertas(req, res) {
       JOIN users u            ON u.id  = e.student_id
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE cc.coordinator_id = ?
       GROUP BY e.id
       HAVING promedio < ? OR pct_asistencia < ? OR (promedio IS NULL AND pct_asistencia < ?)
