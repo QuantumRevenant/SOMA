@@ -278,6 +278,25 @@
     </div>
   </div>
 
+
+  <!-- Popup: Editar observación -->
+  <div class="popup" id="popup-edit-obs">
+    <div class="popup-content" style="max-width:480px">
+      <span class="close-popup" id="close-popup-edit-obs">&times;</span>
+      <h3 style="margin-bottom:16px">Editar observación</h3>
+      <div class="form-group" style="margin-bottom:4px">
+        <label style="font-size:13px;font-weight:600;color:#374151">Contenido</label>
+        <textarea id="edit-obs-content" rows="5"
+          style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;width:100%;resize:vertical"></textarea>
+      </div>
+      <p id="msg-edit-obs" style="color:#e74c3c;font-size:13px;margin:8px 0 12px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" id="btn-confirmar-edit-obs">Guardar</button>
+        <button class="btn btn-secondary" id="btn-cancelar-edit-obs">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/pages/docente/docente.js"></script>
   <script src="../../js/config.js"></script>
   <script src="../../js/chat-widget.js"></script>

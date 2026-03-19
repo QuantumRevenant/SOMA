@@ -602,6 +602,32 @@ function initObservaciones() {
     });
 }
 
+function abrirPopupEditObs(id, current, studentId) {
+    document.getElementById("edit-obs-content").value = current;
+    document.getElementById("msg-edit-obs").textContent = "";
+    const popup = document.getElementById("popup-edit-obs");
+    popup.classList.add("active");
+
+    const close = () => popup.classList.remove("active");
+    document.getElementById("close-popup-edit-obs").onclick = close;
+    document.getElementById("btn-cancelar-edit-obs").onclick = close;
+    popup.onclick = e => { if (e.target === popup) close(); };
+
+    document.getElementById("btn-confirmar-edit-obs").onclick = async () => {
+        const nuevo = document.getElementById("edit-obs-content").value.trim();
+        const msg = document.getElementById("msg-edit-obs");
+        if (!nuevo) { msg.textContent = "La observación no puede estar vacía."; return; }
+        if (nuevo === current) { close(); return; }
+        const res = await apiFetch(`${API}/observaciones/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: nuevo }),
+        });
+        if (res?.ok) { close(); cargarObservaciones(studentId); }
+        else msg.textContent = res?.error ?? "Error al guardar.";
+    };
+}
+
 async function cargarObservaciones(studentId) {
     const data = await apiFetch(`${API}/alumnos/${studentId}/observaciones`);
     if (!data) return;
@@ -642,19 +668,10 @@ async function cargarObservaciones(studentId) {
         <h4 style="margin:16px 0 10px;color:#c0392b">Observaciones Psicológicas</h4>${psicHtml}`;
 
     wrap.querySelectorAll(".btn-edit-obs").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            const id = btn.dataset.id;
+        btn.addEventListener("click", () => {
             const item = btn.closest(".obs-item");
             const current = item.querySelector(".obs-text").textContent;
-            const nuevo = prompt("Editar observación:", current);
-            if (!nuevo || nuevo === current) return;
-            const res = await apiFetch(`${API}/observaciones/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: nuevo }),
-            });
-            if (res?.ok) cargarObservaciones(studentId);
-            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            abrirPopupEditObs(btn.dataset.id, current, studentId);
         });
     });
 
