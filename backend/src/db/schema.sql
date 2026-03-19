@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
   template_id         INT NULL,
   name                VARCHAR(100) NOT NULL,
   weight              DECIMAL(5,2) NOT NULL,
+  position            INT NOT NULL DEFAULT 0,
   FOREIGN KEY (course_section_id) REFERENCES course_sections(id),
   FOREIGN KEY (template_id)       REFERENCES evaluation_templates(id)
 );
@@ -294,34 +295,34 @@ INSERT IGNORE INTO enrollments (student_id, course_section_id) VALUES
   (7, 2), (7, 3), (7, 4);   -- Pedro: INF101, COM101, FIS101 (actual)
 
 -- Evaluaciones MAT101-A actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (1, 1, 'Práctica Calificada 1', 15.00),
-  (1, 2, 'Práctica Calificada 2', 15.00),
-  (1, 3, 'Examen Parcial',        30.00),
-  (1, 4, 'Examen Final',          40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (1, 1, 'Práctica Calificada 1', 15.00, 0),
+  (1, 2, 'Práctica Calificada 2', 15.00, 1),
+  (1, 3, 'Examen Parcial',        30.00, 2),
+  (1, 4, 'Examen Final',          40.00, 3);
 
 -- Evaluaciones INF101-A actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (2, 5, 'Tarea Académica', 10.00),
-  (2, 6, 'Práctica 1',      20.00),
-  (2, 7, 'Examen Parcial',  30.00),
-  (2, 8, 'Proyecto Final',  40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (2, 5, 'Tarea Académica', 10.00, 0),
+  (2, 6, 'Práctica 1',      20.00, 1),
+  (2, 7, 'Examen Parcial',  30.00, 2),
+  (2, 8, 'Proyecto Final',  40.00, 3);
 
 -- Evaluaciones FIS101-B actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (4, 9,  'Laboratorio 1',  20.00),
-  (4, 10, 'Examen Parcial', 40.00),
-  (4, 11, 'Examen Final',   40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (4, 9,  'Laboratorio 1',  20.00, 0),
+  (4, 10, 'Examen Parcial', 40.00, 1),
+  (4, 11, 'Examen Final',   40.00, 2);
 
 -- Evaluaciones MAT101-A pasado (libres, sin template)
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (5, NULL, 'Examen Parcial', 40.00),
-  (5, NULL, 'Examen Final',   60.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (5, NULL, 'Examen Parcial', 40.00, 0),
+  (5, NULL, 'Examen Final',   60.00, 1);
 
 -- Evaluaciones COM101-A pasado
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (6, NULL, 'Trabajo Grupal', 40.00),
-  (6, NULL, 'Examen Final',   60.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (6, NULL, 'Trabajo Grupal', 40.00, 0),
+  (6, NULL, 'Examen Final',   60.00, 1);
 
 -- Notas ciclo actual (Luis: enrollment 1=MAT101, 2=INF101, 3=FIS101)
 INSERT IGNORE INTO grades (enrollment_id, evaluation_id, score, recorded_at) VALUES

@@ -68,7 +68,7 @@ export async function getAlumnosBySeccion(req, res) {
 export async function getEvaluacionesBySeccion(req, res) {
     try {
         const [evaluaciones] = await pool.query(
-            "SELECT id, name, weight, template_id FROM evaluations WHERE course_section_id = ? ORDER BY id",
+            "SELECT id, name, weight, position, template_id FROM evaluations WHERE course_section_id = ? ORDER BY position, id",
             [req.params.id]
         );
         const [notas] = await pool.query(`
@@ -112,19 +112,18 @@ export async function createEvaluacion(req, res) {
     if (check.length === 0) {
         return res.status(403).json({ error: "Sección no autorizada" });
     }
-    const [suma] = await pool.query(
-        "SELECT COALESCE(SUM(weight), 0) AS total FROM evaluations WHERE course_section_id = ?",
-        [req.params.id]
-    );
-    if (parseFloat(suma[0].total) + parseFloat(weight) > 100) {
-        return res.status(400).json({ error: `La suma de pesos superaría 100% (actual: ${suma[0].total}%)` });
-    }
     try {
-        const [result] = await pool.query(
-            "INSERT INTO evaluations (course_section_id, template_id, name, weight) VALUES (?, ?, ?, ?)",
-            [req.params.id, template_id ?? null, name, weight]
+        const [suma] = await pool.query(
+            "SELECT COALESCE(SUM(weight), 0) AS total, COUNT(*) AS count FROM evaluations WHERE course_section_id = ?",
+            [req.params.id]
         );
-        res.json({ ok: true, id: result.insertId });
+        const total = parseFloat(suma[0].total) + parseFloat(weight);
+        const position = parseInt(suma[0].count);
+        const [result] = await pool.query(
+            "INSERT INTO evaluations (course_section_id, template_id, name, weight, position) VALUES (?, ?, ?, ?, ?)",
+            [req.params.id, template_id ?? null, name, weight, position]
+        );
+        res.json({ ok: true, id: result.insertId, warning: total > 100 ? `La suma de pesos es ${total.toFixed(1)}% — podés normalizar para ajustar a 100%` : null });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al crear evaluación" });
@@ -169,6 +168,44 @@ export async function deleteEvaluacion(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al eliminar evaluación" });
+    }
+}
+
+
+export async function reorderEvaluaciones(req, res) {
+    // body: { order: [id, id, id, ...] } — lista de IDs en el nuevo orden
+    const { order } = req.body;
+    if (!Array.isArray(order) || order.length === 0) {
+        return res.status(400).json({ error: "order requerido" });
+    }
+    try {
+        await Promise.all(order.map((id, idx) =>
+            pool.query("UPDATE evaluations SET position = ? WHERE id = ?", [idx, id])
+        ));
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al reordenar" });
+    }
+}
+
+export async function normalizarEvaluaciones(req, res) {
+    try {
+        const [evals] = await pool.query(
+            "SELECT id, weight FROM evaluations WHERE course_section_id = ? ORDER BY position, id",
+            [req.params.id]
+        );
+        if (evals.length === 0) return res.status(404).json({ error: "Sin evaluaciones" });
+        const total = evals.reduce((acc, e) => acc + parseFloat(e.weight), 0);
+        if (total === 0) return res.status(400).json({ error: "Suma de pesos es 0" });
+        await Promise.all(evals.map(e => {
+            const newWeight = parseFloat(((parseFloat(e.weight) / total) * 100).toFixed(2));
+            return pool.query("UPDATE evaluations SET weight = ? WHERE id = ?", [newWeight, e.id]);
+        }));
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al normalizar" });
     }
 }
 

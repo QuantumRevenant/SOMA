@@ -326,12 +326,18 @@ async function cargarNotas(seccionId) {
 
     document.getElementById("panel-evaluaciones").innerHTML = `
         <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <strong>Evaluaciones (total peso: <span id="suma-pesos">${sumaActual}</span>%)</strong>
+            <strong>Evaluaciones</strong>
+            <span style="font-size:13px;color:${sumaActual === 100 ? '#27ae60' : '#e74c3c'}">
+              (${sumaActual.toFixed(1)}%${sumaActual === 100 ? ' ✓' : ' — no suma 100%'})
+            </span>
             <button class="btn btn-secondary" id="btn-from-plantilla" style="flex:none;padding:6px 10px"
                 ${plantilla.length === 0 ? "disabled title='Sin plantilla definida'" : ""}>
                 + Desde plantilla
             </button>
             <button class="btn btn-primary" id="btn-nueva-eval" style="flex:none;padding:6px 10px">+ Nueva</button>
+            <button class="btn btn-secondary" id="btn-normalizar"
+                style="flex:none;padding:6px 10px;font-size:12px${sumaActual === 100 ? ';opacity:0.4' : ''}"
+                title="Ajustar pesos proporcionalmente a 100%">⚖️ Normalizar</button>
         </div>
         <div id="lista-evaluaciones">
             ${evaluaciones.map(ev => rowEvaluacion(ev)).join("")}
@@ -357,10 +363,13 @@ async function cargarNotas(seccionId) {
 
 function rowEvaluacion(ev) {
     return `
-    <div class="eval-row" data-id="${ev.id}">
+    <div class="eval-row" data-id="${ev.id}" draggable="true">
+        <span class="drag-handle" title="Arrastrar para reordenar">⠿</span>
         <span class="eval-name" style="flex:1">${ev.name}</span>
         <span class="eval-weight" style="width:60px;text-align:right">${ev.weight}%</span>
-        <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">✏️</button>
+        <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}"
+            data-name="${ev.name}" data-weight="${ev.weight}"
+            style="padding:4px 8px;font-size:12px">✏️</button>
         <button class="btn btn-secondary btn-del-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">🗑️</button>
     </div>`;
 }
@@ -426,20 +435,92 @@ function bindEvaluacionEvents(seccionId) {
             return;
         }
         if (e.target.matches(".btn-edit-eval")) {
-            const row = e.target.closest(".eval-row");
-            const name = row.querySelector(".eval-name").textContent;
-            const weight = parseFloat(row.querySelector(".eval-weight").textContent);
-            const newName = prompt("Nuevo nombre:", name);
-            const newWeight = parseFloat(prompt("Nuevo peso (%):", weight));
-            if (!newName || isNaN(newWeight)) return;
-            const res = await apiFetch(`${API}/evaluaciones/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newName, weight: newWeight }),
-            });
-            if (res?.ok) cargarNotas(seccionId);
-            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            abrirPopupEditEval(id, e.target.dataset.name, e.target.dataset.weight, seccionId);
         }
+    });
+
+    // ── Normalizar ────────────────────────────────────────────────────────────
+    document.getElementById("btn-normalizar").addEventListener("click", () => {
+        pedirConfirm({
+            titulo: "Normalizar pesos",
+            msg: "Los pesos se ajustarán proporcionalmente para sumar exactamente 100%. ¿Continuar?",
+            icono: "⚖️",
+            labelOk: "Normalizar",
+            onConfirm: async () => {
+                const res = await apiFetch(`${API}/secciones/${seccionId}/evaluaciones/normalizar`, { method: "POST" });
+                if (res?.ok) cargarNotas(seccionId);
+                else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            },
+        });
+    });
+
+    // ── Drag & drop ───────────────────────────────────────────────────────────
+    initDragEval(seccionId);
+}
+
+function abrirPopupEditEval(id, name, weight, seccionId) {
+    document.getElementById("edit-eval-name").value = name;
+    document.getElementById("edit-eval-weight").value = weight;
+    document.getElementById("msg-edit-eval").textContent = "";
+    const popup = document.getElementById("popup-edit-eval");
+    popup.classList.add("active");
+
+    const close = () => popup.classList.remove("active");
+    document.getElementById("close-popup-edit-eval").onclick = close;
+    document.getElementById("btn-cancelar-edit-eval").onclick = close;
+    popup.onclick = e => { if (e.target === popup) close(); };
+
+    document.getElementById("btn-confirmar-edit-eval").onclick = async () => {
+        const newName = document.getElementById("edit-eval-name").value.trim();
+        const newWeight = parseFloat(document.getElementById("edit-eval-weight").value);
+        const msg = document.getElementById("msg-edit-eval");
+        if (!newName) { msg.textContent = "El nombre es requerido."; return; }
+        if (isNaN(newWeight) || newWeight <= 0) { msg.textContent = "Ingresa un peso válido."; return; }
+        const res = await apiFetch(`${API}/evaluaciones/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newName, weight: newWeight }),
+        });
+        if (res?.ok) {
+            close();
+            cargarNotas(seccionId);
+        } else {
+            msg.textContent = res?.error ?? "Error al guardar.";
+        }
+    };
+}
+
+function initDragEval(seccionId) {
+    const lista = document.getElementById("lista-evaluaciones");
+    if (!lista) return;
+    let dragSrc = null;
+
+    lista.addEventListener("dragstart", e => {
+        dragSrc = e.target.closest(".eval-row");
+        if (!dragSrc) return;
+        dragSrc.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+    });
+    lista.addEventListener("dragover", e => {
+        e.preventDefault();
+        const target = e.target.closest(".eval-row");
+        if (!target || target === dragSrc) return;
+        const rows = [...lista.querySelectorAll(".eval-row")];
+        const srcIdx = rows.indexOf(dragSrc);
+        const tgtIdx = rows.indexOf(target);
+        if (srcIdx < tgtIdx) target.after(dragSrc);
+        else target.before(dragSrc);
+    });
+    lista.addEventListener("dragend", async () => {
+        if (dragSrc) dragSrc.classList.remove("dragging");
+        dragSrc = null;
+        const order = [...lista.querySelectorAll(".eval-row")].map(r => parseInt(r.dataset.id));
+        await apiFetch(`${API}/evaluaciones/reorder`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order }),
+        });
+        cargarNotas(seccionId);
     });
 }
 
