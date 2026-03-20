@@ -67,7 +67,40 @@ function fmtDate(d) {
 function isPast(dt) { return new Date(dt) < new Date(); }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+
+// ── Popup Confirm ─────────────────────────────────────────────────────────────
+let _confirmFn = null;
+
+function initPopupConfirm() {
+    document.getElementById("btn-confirm-ok").addEventListener("click", () => {
+        const fn = _confirmFn; cerrarConfirm(); if (fn) fn();
+    });
+    document.getElementById("btn-confirm-cancel").addEventListener("click", cerrarConfirm);
+    document.getElementById("popup-confirm").addEventListener("click", e => {
+        if (e.target === document.getElementById("popup-confirm")) cerrarConfirm();
+    });
+}
+
+function cerrarConfirm() {
+    document.getElementById("popup-confirm").classList.remove("active");
+    _confirmFn = null;
+}
+
+function pedirConfirm({ titulo, msg, icono = "❓", labelOk = "Confirmar", labelCancel = "Volver", esDestructivo = false, onConfirm }) {
+    document.getElementById("confirm-titulo").textContent = titulo;
+    document.getElementById("confirm-msg").textContent = msg;
+    document.getElementById("confirm-icon").textContent = icono;
+    document.getElementById("btn-confirm-cancel").textContent = labelCancel;
+    const btnOk = document.getElementById("btn-confirm-ok");
+    btnOk.textContent = labelOk;
+    btnOk.className = `btn ${esDestructivo ? "btn-cancelar" : "btn-primary"}`;
+    _confirmFn = onConfirm;
+    document.getElementById("popup-confirm").classList.add("active");
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 document.addEventListener("DOMContentLoaded", async () => {
+    initPopupConfirm();
     const me = await apiFetch("/api/me");
     if (!me) return;
     document.getElementById("user-name").textContent = me.full_name;
@@ -369,10 +402,18 @@ async function cargarAcademico() {
       </div>`).join("");
 
         document.querySelectorAll(".btn-activar-periodo").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                if (!confirm(`¿Activar este periodo? El actual quedará inactivo.`)) return;
-                const r = await apiFetch(`${API}/periodos/${btn.dataset.id}/activar`, { method: "PATCH" });
-                if (r?.ok) { await cargarAcademico(); await cargarResumen(); }
+            btn.addEventListener("click", () => {
+                pedirConfirm({
+                    titulo: "Activar periodo",
+                    msg: "¿Activar este periodo? El periodo actual quedará inactivo.",
+                    icono: "📅",
+                    labelOk: "Sí, activar",
+                    onConfirm: async () => {
+                        const r = await apiFetch(`${API}/periodos/${btn.dataset.id}/activar`, { method: "PATCH" });
+                        if (r?.ok) { await cargarAcademico(); await cargarResumen(); }
+                        else pedirConfirm({ titulo: "Error", msg: r?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+                    }
+                });
             });
         });
     }
@@ -545,11 +586,19 @@ async function cargarTalleres() {
     });
 
     document.querySelectorAll(".btn-eliminar-taller").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            if (!confirm("¿Eliminar este taller?")) return;
-            const r = await apiFetch(`${API}/talleres/${btn.dataset.id}`, { method: "DELETE" });
-            if (r?.ok) await cargarTalleres();
-            else alert(r?.error ?? "Error");
+        btn.addEventListener("click", () => {
+            pedirConfirm({
+                titulo: "Eliminar taller",
+                msg: "¿Eliminar este taller? Esta acción no se puede deshacer.",
+                icono: "🗑️",
+                labelOk: "Sí, eliminar",
+                esDestructivo: true,
+                onConfirm: async () => {
+                    const r = await apiFetch(`${API}/talleres/${btn.dataset.id}`, { method: "DELETE" });
+                    if (r?.ok) await cargarTalleres();
+                    else pedirConfirm({ titulo: "Error", msg: r?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+                }
+            });
         });
     });
 }
