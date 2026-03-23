@@ -20,11 +20,14 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/js", express.static(join(__dirname, "../frontend/public/js")));
-app.use("/style.css", express.static(join(__dirname, "../frontend/public/style.css")));
-app.use("/resources", express.static(join(__dirname, "../frontend/public/resources")));
-app.use("/pages", verifyPageAccess, express.static(join(__dirname, "../frontend/public/pages")));
-app.use(express.static(join(__dirname, "../frontend/public")));
+// __dirname = backend/src → frontend está en ../../frontend (raíz del proyecto)
+const FRONTEND = join(__dirname, "../../frontend/public");
+
+app.use("/js",         express.static(join(FRONTEND, "js")));
+app.use("/style.css",  express.static(join(FRONTEND, "style.css")));
+app.use("/resources",  express.static(join(FRONTEND, "resources")));
+app.use("/pages",      verifyPageAccess, express.static(join(FRONTEND, "pages")));
+app.use(express.static(FRONTEND));
 
 app.use("/api", authRoutes);
 app.use("/api/docente", docenteRoutes);

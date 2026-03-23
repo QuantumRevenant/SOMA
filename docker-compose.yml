@@ -1,19 +1,15 @@
 name: SOMA
-
 services:
   backend:
-    build: ./backend
+    build: .
     restart: always
     env_file:
       - .env
     ports:
       - "${PORT}:3000"
-    volumes:
-      - ./frontend:/app/frontend
     depends_on:
       db:
         condition: service_healthy
-
   db:
     image: mariadb:11
     restart: always
@@ -30,6 +26,5 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
 volumes:
   db_data:
