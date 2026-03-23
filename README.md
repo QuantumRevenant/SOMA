@@ -76,6 +76,9 @@ The system includes demo users for testing. All accounts use the password `1234`
 | Estudiante | estudiante@soma.edu |
 | Estudiante 2 | estudiante2@soma.edu |
 | Estudiante 3 | estudiante3@soma.edu |
+| Estudiante 4 | estudiante4@soma.edu |
+| Estudiante 5 | estudiante5@soma.edu |
+| Estudiante 6 | estudiante6@soma.edu |
 
 ---
 
@@ -84,10 +87,12 @@ The system includes demo users for testing. All accounts use the password `1234`
 **Docente**
 - Register grades and attendance by section
 - Create and manage tutoring slots with capacity control and multi-student assignment
-- Write academic observations per student
+- Drag-and-drop reordering of evaluation types with weight normalization
+- Write and edit academic observations per student via popup
 
 **Psicólogo**
 - Manage appointment availability with configurable capacity
+- Student panel grouped by recency (next 24h, upcoming, last month, last 3 months, older) with deduplication
 - Maintain psychological observation history per student
 - Calendar view of upcoming sessions
 
@@ -98,8 +103,9 @@ The system includes demo users for testing. All accounts use the password `1234`
 
 **Coordinador**
 - Manage academic structure: periods, courses, sections, and evaluation templates
-- Create and manage institutional workshops
+- Create and manage institutional workshops with datetime picker and Google Calendar-style UX
 - Filter at-risk students by GPA or attendance thresholds
+- Attendance percentage calculated independently per student
 
 ---
 
@@ -116,19 +122,15 @@ The system includes demo users for testing. All accounts use the password `1234`
 
 ---
 
-## Project Report 📄 (Not available yet)
+## Project Report 📄
 
-The full project report (in Spanish) will be available in the repository: [`SOMA_Informe.pdf`](./SOMA_Informe.pdf)
+The full project report (in Spanish) is available in the repository: [`SOMA_Informe.pdf`](https://github.com/QuantumRevenant/SOMA/releases/download/v0.3.1/SOMA_Informe.pdf)
 
-It will covers problem analysis, requirements, database design, development, testing, and implementation planning.
+It covers problem analysis, requirements, database design, development, testing, and implementation planning.
 
 ---
 
 ## Roadmap 🗺️
-
-**v0.3.1** *(upcoming)*
-- External chat support bubble (WhatsApp / Telegram redirect)
-- Minor UI fixes
 
 **v0.4.0** *(planned)*
 - Admin role with user registration and management via UI
