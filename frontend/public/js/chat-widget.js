@@ -10,7 +10,7 @@
   // ── Configuración: SOMA_CONFIG > data-attributes > defaults ──
   const _cfg = (typeof SOMA_CONFIG !== "undefined" && SOMA_CONFIG.support) || {};
   const config = {
-    href: _cfg.href || script?.dataset.href || "https://wa.me/message/54ZVGH6PRSBTK1",
+    href: _cfg.href || script?.dataset.href || "#",
     label: _cfg.label || script?.dataset.label || "¿Necesitas soporte?",
     target: _cfg.target || script?.dataset.target || "_blank",
   };
