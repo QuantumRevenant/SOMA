@@ -129,17 +129,7 @@
   </div>
 
   <!-- Popup: Confirmación reutilizable -->
-  <div class="popup" id="popup-confirm">
-    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
-      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
-      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
-      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
-        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Popup: Nueva asesoría -->
   <div class="popup" id="popup-nueva-asesoria">
@@ -149,11 +139,11 @@
       <div style="display:flex;flex-direction:column;gap:12px">
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Inicio</label>
-          <input type="datetime-local" id="asesoria-inicio" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+          <input type="datetime-local" id="asesoria-inicio" step="900" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Fin</label>
-          <input type="datetime-local" id="asesoria-fin" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+          <input type="datetime-local" id="asesoria-fin" step="900" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
@@ -190,11 +180,11 @@
       <div style="display:flex;flex-direction:column;gap:12px">
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Inicio</label>
-          <input type="datetime-local" id="edit-asesoria-inicio" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+          <input type="datetime-local" id="edit-asesoria-inicio" step="900" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Fin</label>
-          <input type="datetime-local" id="edit-asesoria-fin" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
+          <input type="datetime-local" id="edit-asesoria-fin" step="900" style="width:100%;margin-top:4px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151">Cupo máximo</label>
@@ -229,6 +219,86 @@
     </div>
   </div>
 
+  <!-- Popup: Editar evaluación -->
+  <div class="popup" id="popup-edit-eval">
+    <div class="popup-content" style="max-width:400px">
+      <span class="close-popup" id="close-popup-edit-eval">&times;</span>
+      <h3 style="margin-bottom:20px">Editar evaluación</h3>
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;display:block">Nombre</label>
+        <input type="text" id="edit-eval-name" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px">
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;display:block">Peso (%)</label>
+        <input type="number" id="edit-eval-weight" min="1" max="200" step="0.5"
+          style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px">
+        <p id="msg-edit-eval-warning" style="color:#856404;background:#fff3cd;padding:6px 10px;border-radius:6px;font-size:12px;margin-top:8px;display:none"></p>
+      </div>
+      <p id="msg-edit-eval" style="color:#e74c3c;font-size:13px;margin-bottom:12px;min-height:18px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" id="btn-confirmar-edit-eval">Guardar</button>
+        <button class="btn btn-secondary" id="btn-cancelar-edit-eval">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- popup-confirm siempre al final del DOM para z-index superior -->
+  <div class="popup" id="popup-confirm" style="z-index:1100">
+    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
+      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
+      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
+      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Popup: Editar evaluación -->
+  <div class="popup" id="popup-edit-eval">
+    <div class="popup-content" style="max-width:400px">
+      <span class="close-popup" id="close-popup-edit-eval">&times;</span>
+      <h3 style="margin-bottom:16px">Editar evaluación</h3>
+      <div class="form-group" style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:#374151">Nombre</label>
+        <input type="text" id="edit-eval-name" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;width:100%">
+      </div>
+      <div class="form-group" style="margin-bottom:4px">
+        <label style="font-size:13px;font-weight:600;color:#374151">Peso (%)</label>
+        <input type="number" id="edit-eval-weight" min="0" max="200" step="0.5"
+          style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;width:100%">
+      </div>
+      <p id="msg-edit-eval" style="color:#e74c3c;font-size:13px;margin:8px 0 12px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" id="btn-confirmar-edit-eval">Guardar</button>
+        <button class="btn btn-secondary" id="btn-cancelar-edit-eval">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Popup: Editar observación -->
+  <div class="popup" id="popup-edit-obs">
+    <div class="popup-content" style="max-width:480px">
+      <span class="close-popup" id="close-popup-edit-obs">&times;</span>
+      <h3 style="margin-bottom:16px">Editar observación</h3>
+      <div class="form-group" style="margin-bottom:4px">
+        <label style="font-size:13px;font-weight:600;color:#374151">Contenido</label>
+        <textarea id="edit-obs-content" rows="5"
+          style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;width:100%;resize:vertical"></textarea>
+      </div>
+      <p id="msg-edit-obs" style="color:#e74c3c;font-size:13px;margin:8px 0 12px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" id="btn-confirmar-edit-obs">Guardar</button>
+        <button class="btn btn-secondary" id="btn-cancelar-edit-obs">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/pages/docente/docente.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/chat-widget.js"></script>
 </body>
 </html>

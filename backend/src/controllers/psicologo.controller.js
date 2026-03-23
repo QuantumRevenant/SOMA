@@ -1,3 +1,12 @@
+// Convierte cualquier string de fecha (incluyendo con offset) a "YYYY-MM-DD HH:MM:SS"
+// que es el formato que acepta MariaDB para columnas DATETIME.
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 const HASH = '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu';
@@ -8,25 +17,47 @@ export async function getEstudiantes(req, res) {
     const psicId = req.user.id;
     const q = req.query.q?.trim() || "";
     try {
-        const [proxima] = await pool.query(`
+        // Próximas 24h
+        const [proximas24h] = await pool.query(`
       SELECT u.id, u.full_name, u.email, s.starts_at AS proxima_cita
       FROM slot_bookings sb
       JOIN slots s ON s.id = sb.slot_id
       JOIN users u ON u.id = sb.student_id
       WHERE s.owner_id = ? AND s.type = 'cita_psicologica'
-        AND sb.status = 'confirmada' AND s.starts_at > NOW()
-      ORDER BY s.starts_at ASC LIMIT 1
+        AND sb.status = 'confirmada'
+        AND s.starts_at > NOW()
+        AND s.starts_at <= DATE_ADD(NOW(), INTERVAL 24 HOUR)
+      ORDER BY s.starts_at ASC
     `, [psicId]);
 
+        // Próximas (más allá de 24h) — la más próxima por estudiante
+        const [proximasFuturas] = await pool.query(`
+      SELECT u.id, u.full_name, u.email, MIN(s.starts_at) AS proxima_cita
+      FROM slot_bookings sb
+      JOIN slots s ON s.id = sb.slot_id
+      JOIN users u ON u.id = sb.student_id
+      WHERE s.owner_id = ? AND s.type = 'cita_psicologica'
+        AND sb.status = 'confirmada'
+        AND s.starts_at > DATE_ADD(NOW(), INTERVAL 24 HOUR)
+      GROUP BY u.id ORDER BY proxima_cita ASC
+    `, [psicId]);
+
+        // Historial agrupado por recencia — solo citas pasadas para ultima_cita
         const [conHistorial] = await pool.query(`
       SELECT u.id, u.full_name, u.email,
-             MAX(s.starts_at) AS ultima_cita,
-             COUNT(sb.id)     AS total_citas
+             MAX(s.starts_at)   AS ultima_cita,
+             COUNT(sb.id)       AS total_citas,
+             CASE
+               WHEN MAX(s.starts_at) >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 'mes'
+               WHEN MAX(s.starts_at) >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 'trimestre'
+               ELSE 'anterior'
+             END AS grupo
       FROM slot_bookings sb
       JOIN slots s ON s.id = sb.slot_id
       JOIN users u ON u.id = sb.student_id
       WHERE s.owner_id = ? AND s.type = 'cita_psicologica'
         AND sb.status != 'cancelada'
+        AND s.starts_at <= NOW()
       GROUP BY u.id ORDER BY ultima_cita DESC
     `, [psicId]);
 
@@ -40,7 +71,15 @@ export async function getEstudiantes(req, res) {
             general = rows;
         }
 
-        res.json({ proxima: proxima[0] ?? null, conHistorial, general });
+        // Deduplicar: cada estudiante aparece solo una vez, por prioridad:
+        // 1. proximas24h  2. proximasFuturas  3. conHistorial (por grupo)
+        const ids24h = new Set(proximas24h.map(e => e.id));
+        const idsFut = new Set(proximasFuturas.map(e => e.id));
+        const proxFutFiltradas = proximasFuturas.filter(e => !ids24h.has(e.id));
+        const excluirHistorial = new Set([...ids24h, ...idsFut]);
+        const historialFiltrado = conHistorial.filter(e => !excluirHistorial.has(e.id));
+
+        res.json({ proximas24h, proximasFuturas: proxFutFiltradas, conHistorial: historialFiltrado, general });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al obtener estudiantes" });
@@ -163,8 +202,22 @@ export async function crearSlot(req, res) {
     const { starts_at, ends_at, location, capacity = 1, student_ids = [] } = req.body;
     if (!starts_at || !ends_at) return res.status(400).json({ error: "Fecha requerida" });
 
-    if (new Date(starts_at) < new Date())
-        return res.status(400).json({ error: "No puedes crear una cita en el pasado" });
+    const ahoraMs = Date.now();
+    const inicioMs = new Date(starts_at).getTime();
+    const finMs = new Date(ends_at).getTime();
+    const UNA_HORA = 60 * 60 * 1000;
+
+    if (inicioMs < ahoraMs - UNA_HORA)
+        return res.status(400).json({ error: "El inicio no puede ser más de 1 hora en el pasado" });
+    if (finMs <= ahoraMs)
+        return res.status(400).json({ error: "La hora de fin ya pasó" });
+    if (finMs <= inicioMs)
+        return res.status(400).json({ error: "El fin debe ser posterior al inicio" });
+
+    // Cita en curso o inmediata (inicio dentro de ±1h): requiere estudiante asignado
+    const esInmediataOEnCurso = inicioMs < ahoraMs + UNA_HORA;
+    if (esInmediataOEnCurso && student_ids.length === 0)
+        return res.status(400).json({ error: "Las citas en curso o dentro de la próxima hora requieren al menos un estudiante asignado" });
 
     if (student_ids.length > capacity)
         return res.status(400).json({ error: `No puedes asignar más alumnos que el cupo (${capacity})` });
@@ -172,7 +225,7 @@ export async function crearSlot(req, res) {
     try {
         const [r] = await pool.query(
             "INSERT INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES (?, 'cita_psicologica', ?, ?, ?, ?)",
-            [req.user.id, starts_at, ends_at, capacity, location ?? null]
+            [req.user.id, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity, location ?? null]
         );
         const slotId = r.insertId;
 
@@ -203,7 +256,7 @@ export async function editarSlot(req, res) {
         if (!slot) return res.status(403).json({ error: "No autorizado" });
         await pool.query(
             "UPDATE slots SET starts_at = ?, ends_at = ?, location = ?, capacity = ? WHERE id = ?",
-            [starts_at, ends_at, location ?? null, capacity ?? 1, req.params.id]
+            [toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), location ?? null, capacity ?? 1, req.params.id]
         );
         res.json({ ok: true });
     } catch (err) {
@@ -245,6 +298,8 @@ export async function eliminarSlot(req, res) {
             );
         }
 
+        // Borrar todas las bookings (incluyendo canceladas) antes de eliminar el slot
+        await pool.query("DELETE FROM slot_bookings WHERE slot_id = ?", [slotId]);
         await pool.query("DELETE FROM slots WHERE id = ?", [slotId]);
         res.json({ ok: true });
     } catch (err) {

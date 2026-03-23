@@ -7,6 +7,8 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
+    // Sin dateStrings ni timezone: mysql2 devuelve objetos Date que JSON.stringify
+    // serializa como ISO UTC ("...Z"), el frontend los parsea correctamente sin conversión
 });
 
 export default pool;

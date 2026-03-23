@@ -1,3 +1,11 @@
+// Convierte string de fecha con offset a "YYYY-MM-DD HH:MM:SS" para MariaDB DATETIME
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 // ── Secciones ─────────────────────────────────────────────────────────────────
@@ -60,7 +68,7 @@ export async function getAlumnosBySeccion(req, res) {
 export async function getEvaluacionesBySeccion(req, res) {
     try {
         const [evaluaciones] = await pool.query(
-            "SELECT id, name, weight, template_id FROM evaluations WHERE course_section_id = ? ORDER BY id",
+            "SELECT id, name, weight, position, template_id FROM evaluations WHERE course_section_id = ? ORDER BY position, id",
             [req.params.id]
         );
         const [notas] = await pool.query(`
@@ -104,19 +112,18 @@ export async function createEvaluacion(req, res) {
     if (check.length === 0) {
         return res.status(403).json({ error: "Sección no autorizada" });
     }
-    const [suma] = await pool.query(
-        "SELECT COALESCE(SUM(weight), 0) AS total FROM evaluations WHERE course_section_id = ?",
-        [req.params.id]
-    );
-    if (parseFloat(suma[0].total) + parseFloat(weight) > 100) {
-        return res.status(400).json({ error: `La suma de pesos superaría 100% (actual: ${suma[0].total}%)` });
-    }
     try {
-        const [result] = await pool.query(
-            "INSERT INTO evaluations (course_section_id, template_id, name, weight) VALUES (?, ?, ?, ?)",
-            [req.params.id, template_id ?? null, name, weight]
+        const [suma] = await pool.query(
+            "SELECT COALESCE(SUM(weight), 0) AS total, COUNT(*) AS count FROM evaluations WHERE course_section_id = ?",
+            [req.params.id]
         );
-        res.json({ ok: true, id: result.insertId });
+        const total = parseFloat(suma[0].total) + parseFloat(weight);
+        const position = parseInt(suma[0].count);
+        const [result] = await pool.query(
+            "INSERT INTO evaluations (course_section_id, template_id, name, weight, position) VALUES (?, ?, ?, ?, ?)",
+            [req.params.id, template_id ?? null, name, weight, position]
+        );
+        res.json({ ok: true, id: result.insertId, warning: total > 100 ? `La suma de pesos es ${total.toFixed(1)}% — podés normalizar para ajustar a 100%` : null });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al crear evaluación" });
@@ -161,6 +168,44 @@ export async function deleteEvaluacion(req, res) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error al eliminar evaluación" });
+    }
+}
+
+
+export async function reorderEvaluaciones(req, res) {
+    // body: { order: [id, id, id, ...] } — lista de IDs en el nuevo orden
+    const { order } = req.body;
+    if (!Array.isArray(order) || order.length === 0) {
+        return res.status(400).json({ error: "order requerido" });
+    }
+    try {
+        await Promise.all(order.map((id, idx) =>
+            pool.query("UPDATE evaluations SET position = ? WHERE id = ?", [idx, id])
+        ));
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al reordenar" });
+    }
+}
+
+export async function normalizarEvaluaciones(req, res) {
+    try {
+        const [evals] = await pool.query(
+            "SELECT id, weight FROM evaluations WHERE course_section_id = ? ORDER BY position, id",
+            [req.params.id]
+        );
+        if (evals.length === 0) return res.status(404).json({ error: "Sin evaluaciones" });
+        const total = evals.reduce((acc, e) => acc + parseFloat(e.weight), 0);
+        if (total === 0) return res.status(400).json({ error: "Suma de pesos es 0" });
+        await Promise.all(evals.map(e => {
+            const newWeight = parseFloat(((parseFloat(e.weight) / total) * 100).toFixed(2));
+            return pool.query("UPDATE evaluations SET weight = ? WHERE id = ?", [newWeight, e.id]);
+        }));
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al normalizar" });
     }
 }
 
@@ -335,7 +380,7 @@ export async function getMisAsesorias(req, res) {
       LEFT JOIN slot_bookings sb ON sb.slot_id = s.id AND sb.status != 'cancelada'
       WHERE s.owner_id = ? AND s.type = 'asesoria'
       GROUP BY s.id
-      ORDER BY s.starts_at DESC
+      ORDER BY s.starts_at ASC
     `, [req.user.id]);
         res.json(rows);
     } catch (err) {
@@ -350,8 +395,16 @@ export async function createAsesoria(req, res) {
     if (!starts_at || !ends_at)
         return res.status(400).json({ error: "Fecha de inicio y fin requeridas" });
 
-    if (new Date(starts_at) < new Date())
-        return res.status(400).json({ error: "No puedes crear una asesoría en el pasado" });
+    const ahoraMs = Date.now();
+    const inicioMs = new Date(starts_at).getTime();
+    const finMs = new Date(ends_at).getTime();
+    const UNA_HORA = 60 * 60 * 1000;
+    if (inicioMs < ahoraMs - UNA_HORA)
+        return res.status(400).json({ error: "El inicio no puede ser más de 1 hora en el pasado" });
+    if (finMs <= ahoraMs)
+        return res.status(400).json({ error: "La hora de fin ya pasó" });
+    if (finMs <= inicioMs)
+        return res.status(400).json({ error: "El fin debe ser posterior al inicio" });
 
     if (student_ids.length > capacity)
         return res.status(400).json({ error: `No puedes asignar más alumnos que el cupo (${capacity})` });
@@ -359,7 +412,7 @@ export async function createAsesoria(req, res) {
     try {
         const [result] = await pool.query(
             "INSERT INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES (?, 'asesoria', ?, ?, ?, ?)",
-            [req.user.id, starts_at, ends_at, capacity, location ?? null]
+            [req.user.id, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity, location ?? null]
         );
         const slotId = result.insertId;
 
@@ -390,7 +443,7 @@ export async function editarAsesoria(req, res) {
         if (check.length === 0) return res.status(403).json({ error: "No autorizado" });
         await pool.query(
             "UPDATE slots SET starts_at = ?, ends_at = ?, capacity = ?, location = ? WHERE id = ?",
-            [starts_at, ends_at, capacity ?? 5, location ?? null, req.params.id]
+            [toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity ?? 5, location ?? null, req.params.id]
         );
         res.json({ ok: true });
     } catch (err) {

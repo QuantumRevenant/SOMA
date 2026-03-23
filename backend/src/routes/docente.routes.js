@@ -8,6 +8,8 @@ import {
     createEvaluacion,
     updateEvaluacion,
     deleteEvaluacion,
+    reorderEvaluaciones,
+    normalizarEvaluaciones,
     upsertNota,
     registrarAsistencia,
     getAsistencia,
@@ -35,6 +37,8 @@ router.get("/secciones/:id/asistencia", getAsistencia);
 // Evaluaciones
 router.put("/evaluaciones/:id", updateEvaluacion);
 router.delete("/evaluaciones/:id", deleteEvaluacion);
+router.post("/evaluaciones/reorder", reorderEvaluaciones);
+router.post("/secciones/:id/evaluaciones/normalizar", normalizarEvaluaciones);
 
 // Notas
 router.post("/notas", upsertNota);

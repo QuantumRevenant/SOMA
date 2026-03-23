@@ -28,14 +28,25 @@
     </div>
     <div class="right">
       <nav>
-        <a href="#" >Soporte</a>
-        <a href="#" >Informe Final</a>
-        <a href="https://github.com/QuantumRevenant/SOMA" target="_blank" >Github</a>
+        <a id="nav-soporte" href="#" target="_blank">Soporte</a>
+        <a href="https://github.com/QuantumRevenant/SOMA/releases/download/v0.3.1/SOMA_Informe.pdf" target="_blank">Informe Final</a>
+        <a href="https://github.com/QuantumRevenant/SOMA" target="_blank">Github</a>
       </nav>
       <img src="https://www.apega.org/wp-content/uploads/2020/10/educacion-emocional.jpg" alt="Educación Emocional" class="img-emocional">
     </div>
   </div>
 
   <script type="module" src="/js/main.js"></script>
+  <script src="./js/config.js"></script>
+  <script src="./js/chat-widget.js"></script>
+  <script>
+    // Apuntar el botón de soporte al mismo destino que el chat widget
+    const _s = (typeof SOMA_CONFIG !== "undefined" && SOMA_CONFIG.support) || {};
+    const navSoporte = document.getElementById("nav-soporte");
+    if (navSoporte) {
+      navSoporte.href   = _s.href   || "#";
+      navSoporte.target = _s.target || "_blank";
+    }
+  </script>
 </body>
 </html>

@@ -6,15 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.1] - Upcoming
+## [0.3.1] - Unreleased
 
 ### Added
-- ➕ External chat support bubble with redirect to WhatsApp or Telegram
+- ➕ `frontend/public/js/chat-widget.js` — self-contained support bubble widget, injected via JS (no per-page HTML duplication)
+- ➕ `frontend/public/js/config.js` — centralized frontend configuration (`SOMA_CONFIG`), controls support link, label and target across all portals
+- ➕ Chat widget reads from `SOMA_CONFIG` with `data-attribute` and hardcoded fallbacks
 
-### Fixed
-- 🐛 Minor UI fixes across portals
 
----
 
 ## [0.3.0] - 2025-12-08
 
@@ -64,7 +63,7 @@ Final university presentation version. First functional version with real backen
 Static prototype presented in class. No backend, no real data — all content simulated in the frontend.
 
 ### Added
-- ➕ Fully static HTML/CSS/JS prototipe interfaces for Psicólogo, Estudiante, and Docente portals
+- ➕ Fully static HTML/CSS/JS interfaces for Psicólogo, Estudiante, and Docente portals
 - ➕ Navigable prototype deployable on GitHub Pages
 - ➕ Login page with role selector (Docente, Psicólogo, Estudiante)
 - ➕ Simulated data for courses, grades, appointments, and observations

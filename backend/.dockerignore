@@ -1,5 +1,0 @@
-cat > backend/.dockerignore << 'EOF'
-node_modules
-.env
-*.log
-EOF

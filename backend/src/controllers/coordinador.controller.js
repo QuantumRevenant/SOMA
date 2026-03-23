@@ -1,3 +1,11 @@
+// Convierte string de fecha con offset a "YYYY-MM-DD HH:MM:SS" para MariaDB DATETIME
+function toMySQLDatetime(str) {
+    const d = new Date(str);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 import pool from "../config/db.js";
 
 // Helper: verifica que el coordinador tenga acceso al curso
@@ -109,10 +117,14 @@ export async function getAlumnos(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score * (ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia,
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia,
         COUNT(DISTINCT e.id) AS cursos_activos
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
@@ -122,7 +134,6 @@ export async function getAlumnos(req, res) {
       JOIN users u            ON u.id  = e.student_id ${extra}
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE cc.coordinator_id = ?
       GROUP BY u.id
       ORDER BY u.full_name
@@ -161,10 +172,14 @@ export async function getPerfilAlumno(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score*(ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM enrollments e
       JOIN course_sections cs ON cs.id = e.course_section_id
       JOIN courses c          ON c.id  = cs.course_id
@@ -172,7 +187,6 @@ export async function getPerfilAlumno(req, res) {
       JOIN users u            ON u.id  = cs.docente_id
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE e.student_id = ?
       GROUP BY e.id
     `, [studentId]);
@@ -318,7 +332,7 @@ export async function getTalleres(req, res) {
       LEFT JOIN workshop_enrollments we ON we.workshop_id = w.id
       WHERE w.coordinator_id = ?
       GROUP BY w.id
-      ORDER BY w.starts_at DESC
+      ORDER BY w.starts_at ASC
     `, [coordId]);
         res.json(talleres);
     } catch (err) {
@@ -335,7 +349,7 @@ export async function crearTaller(req, res) {
             `INSERT INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location)
        VALUES (?,?,?,?,?,?,?,?)`,
             [req.user.id, title, description ?? null, expositor ?? null,
-                starts_at, ends_at, capacity ?? 30, location ?? null]
+            toMySQLDatetime(starts_at), toMySQLDatetime(ends_at), capacity ?? 30, location ?? null]
         );
         res.json({ ok: true, id: r.insertId });
     } catch (err) {
@@ -349,7 +363,7 @@ export async function editarTaller(req, res) {
         const [r] = await pool.query(
             `UPDATE workshops SET title=?, description=?, expositor=?, starts_at=?, ends_at=?, capacity=?, location=?
        WHERE id=? AND coordinator_id=?`,
-            [title, description ?? null, expositor ?? null, starts_at, ends_at,
+            [title, description ?? null, expositor ?? null, toMySQLDatetime(starts_at), toMySQLDatetime(ends_at),
                 capacity ?? 30, location ?? null, req.params.id, req.user.id]
         );
         if (r.affectedRows === 0) return res.status(403).json({ error: "No autorizado" });
@@ -431,10 +445,14 @@ export async function getReporteAsistencia(req, res) {
         SUM(CASE WHEN a.status = 'presente'  THEN 1 ELSE 0 END) AS presentes,
         SUM(CASE WHEN a.status = 'tardanza'  THEN 1 ELSE 0 END) AS tardanzas,
         SUM(CASE WHEN a.status = 'ausente'   THEN 1 ELSE 0 END) AS ausentes,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
       JOIN course_sections cs ON cs.course_id = c.id
@@ -492,10 +510,14 @@ export async function getAlertas(req, res) {
           SUM(CASE WHEN g.score IS NOT NULL THEN g.score*(ev.weight/100) ELSE 0 END) /
           NULLIF(SUM(CASE WHEN g.score IS NOT NULL THEN ev.weight/100 ELSE 0 END), 0)
         , 2) AS promedio,
-        ROUND(
-          SUM(CASE WHEN a.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(DISTINCT a.id), 0) * 100
-        , 0) AS pct_asistencia
+        (
+        SELECT ROUND(
+          SUM(CASE WHEN a2.status IN ('presente','tardanza') THEN 1 ELSE 0 END) /
+          NULLIF(COUNT(a2.id), 0) * 100
+        , 0)
+        FROM attendance a2
+        WHERE a2.enrollment_id = e.id
+      ) AS pct_asistencia
       FROM coordinator_courses cc
       JOIN courses c          ON c.id  = cc.course_id
       JOIN course_sections cs ON cs.course_id = c.id
@@ -504,7 +526,6 @@ export async function getAlertas(req, res) {
       JOIN users u            ON u.id  = e.student_id
       LEFT JOIN evaluations ev ON ev.course_section_id = cs.id
       LEFT JOIN grades g       ON g.enrollment_id = e.id AND g.evaluation_id = ev.id
-      LEFT JOIN attendance a   ON a.enrollment_id = e.id
       WHERE cc.coordinator_id = ?
       GROUP BY e.id
       HAVING promedio < ? OR pct_asistencia < ? OR (promedio IS NULL AND pct_asistencia < ?)

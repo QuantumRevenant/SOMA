@@ -1,0 +1,24 @@
+# Dependencias
+backend/node_modules
+
+# Variables de entorno
+.env
+
+# Logs
+*.log
+backend/*.log
+
+# Git
+.git
+.gitignore
+
+# Docs y archivos de repo
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+COMMIT_CONVENTION.md
+CODE_OF_CONDUCT.md
+LICENSE
+
+# Mockups y recursos de desarrollo
+frontend/public/resources/mockups

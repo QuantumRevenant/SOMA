@@ -1,3 +1,53 @@
+// ── Time helpers ─────────────────────────────────────────────────────────────
+function toLocalDatetimeValue(date) {
+    const d = new Date(date);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toLocalISOWithOffset(datetimeLocalValue) {
+    if (!datetimeLocalValue) return null;
+    const d = new Date(datetimeLocalValue);
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(off) % 60).padStart(2, "0");
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:00${sign}${hh}:${mm}`;
+}
+
+function redondearA15(date) {
+    const d = new Date(date);
+    const m = d.getMinutes();
+    const resto = m % 15;
+    if (resto !== 0) d.setMinutes(m + (15 - resto));
+    d.setSeconds(0, 0);
+    return d;
+}
+
+function sincronizarFin(startsId, endsId, trigger) {
+    const startsEl = document.getElementById(startsId);
+    const endsEl = document.getElementById(endsId);
+    if (!startsEl || !endsEl) return;
+    const startsVal = startsEl.value;
+    const endsVal = endsEl.value;
+    if (!startsVal) return;
+    const startsMs = new Date(startsVal).getTime();
+    if (trigger === "starts") {
+        const durMs = parseInt(endsEl.dataset.durMs) || 2 * 60 * 60 * 1000;
+        endsEl.value = toLocalDatetimeValue(new Date(startsMs + durMs));
+        endsEl.min = startsVal;
+    } else {
+        if (endsVal && new Date(endsVal) <= new Date(startsVal)) {
+            endsEl.value = toLocalDatetimeValue(new Date(startsMs + 15 * 60 * 1000));
+        }
+        const newDurMs = new Date(endsEl.value).getTime() - startsMs;
+        if (newDurMs > 0) endsEl.dataset.durMs = String(newDurMs);
+    }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const API = "/api/docente";
 let seccionesCache = [];
 
@@ -8,6 +58,7 @@ async function apiFetch(url, opts = {}) {
 }
 
 function fmt(dt) {
+    if (!dt) return "—";
     return new Date(dt).toLocaleString("es-PE", {
         day: "2-digit", month: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit"
@@ -275,12 +326,18 @@ async function cargarNotas(seccionId) {
 
     document.getElementById("panel-evaluaciones").innerHTML = `
         <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <strong>Evaluaciones (total peso: <span id="suma-pesos">${sumaActual}</span>%)</strong>
+            <strong>Evaluaciones</strong>
+            <span style="font-size:13px;color:${sumaActual === 100 ? '#27ae60' : '#e74c3c'}">
+              (${sumaActual.toFixed(1)}%${sumaActual === 100 ? ' ✓' : ' — no suma 100%'})
+            </span>
             <button class="btn btn-secondary" id="btn-from-plantilla" style="flex:none;padding:6px 10px"
                 ${plantilla.length === 0 ? "disabled title='Sin plantilla definida'" : ""}>
                 + Desde plantilla
             </button>
             <button class="btn btn-primary" id="btn-nueva-eval" style="flex:none;padding:6px 10px">+ Nueva</button>
+            <button class="btn btn-secondary" id="btn-normalizar"
+                style="flex:none;padding:6px 10px;font-size:12px${sumaActual === 100 ? ';opacity:0.4' : ''}"
+                title="Ajustar pesos proporcionalmente a 100%">⚖️ Normalizar</button>
         </div>
         <div id="lista-evaluaciones">
             ${evaluaciones.map(ev => rowEvaluacion(ev)).join("")}
@@ -306,10 +363,13 @@ async function cargarNotas(seccionId) {
 
 function rowEvaluacion(ev) {
     return `
-    <div class="eval-row" data-id="${ev.id}">
+    <div class="eval-row" data-id="${ev.id}" draggable="true">
+        <span class="drag-handle" title="Arrastrar para reordenar">⠿</span>
         <span class="eval-name" style="flex:1">${ev.name}</span>
         <span class="eval-weight" style="width:60px;text-align:right">${ev.weight}%</span>
-        <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">✏️</button>
+        <button class="btn btn-secondary btn-edit-eval" data-id="${ev.id}"
+            data-name="${ev.name}" data-weight="${ev.weight}"
+            style="padding:4px 8px;font-size:12px">✏️</button>
         <button class="btn btn-secondary btn-del-eval" data-id="${ev.id}" style="padding:4px 8px;font-size:12px">🗑️</button>
     </div>`;
 }
@@ -375,20 +435,92 @@ function bindEvaluacionEvents(seccionId) {
             return;
         }
         if (e.target.matches(".btn-edit-eval")) {
-            const row = e.target.closest(".eval-row");
-            const name = row.querySelector(".eval-name").textContent;
-            const weight = parseFloat(row.querySelector(".eval-weight").textContent);
-            const newName = prompt("Nuevo nombre:", name);
-            const newWeight = parseFloat(prompt("Nuevo peso (%):", weight));
-            if (!newName || isNaN(newWeight)) return;
-            const res = await apiFetch(`${API}/evaluaciones/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newName, weight: newWeight }),
-            });
-            if (res?.ok) cargarNotas(seccionId);
-            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            abrirPopupEditEval(id, e.target.dataset.name, e.target.dataset.weight, seccionId);
         }
+    });
+
+    // ── Normalizar ────────────────────────────────────────────────────────────
+    document.getElementById("btn-normalizar").addEventListener("click", () => {
+        pedirConfirm({
+            titulo: "Normalizar pesos",
+            msg: "Los pesos se ajustarán proporcionalmente para sumar exactamente 100%. ¿Continuar?",
+            icono: "⚖️",
+            labelOk: "Normalizar",
+            onConfirm: async () => {
+                const res = await apiFetch(`${API}/secciones/${seccionId}/evaluaciones/normalizar`, { method: "POST" });
+                if (res?.ok) cargarNotas(seccionId);
+                else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            },
+        });
+    });
+
+    // ── Drag & drop ───────────────────────────────────────────────────────────
+    initDragEval(seccionId);
+}
+
+function abrirPopupEditEval(id, name, weight, seccionId) {
+    document.getElementById("edit-eval-name").value = name;
+    document.getElementById("edit-eval-weight").value = weight;
+    document.getElementById("msg-edit-eval").textContent = "";
+    const popup = document.getElementById("popup-edit-eval");
+    popup.classList.add("active");
+
+    const close = () => popup.classList.remove("active");
+    document.getElementById("close-popup-edit-eval").onclick = close;
+    document.getElementById("btn-cancelar-edit-eval").onclick = close;
+    popup.onclick = e => { if (e.target === popup) close(); };
+
+    document.getElementById("btn-confirmar-edit-eval").onclick = async () => {
+        const newName = document.getElementById("edit-eval-name").value.trim();
+        const newWeight = parseFloat(document.getElementById("edit-eval-weight").value);
+        const msg = document.getElementById("msg-edit-eval");
+        if (!newName) { msg.textContent = "El nombre es requerido."; return; }
+        if (isNaN(newWeight) || newWeight <= 0) { msg.textContent = "Ingresa un peso válido."; return; }
+        const res = await apiFetch(`${API}/evaluaciones/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newName, weight: newWeight }),
+        });
+        if (res?.ok) {
+            close();
+            cargarNotas(seccionId);
+        } else {
+            msg.textContent = res?.error ?? "Error al guardar.";
+        }
+    };
+}
+
+function initDragEval(seccionId) {
+    const lista = document.getElementById("lista-evaluaciones");
+    if (!lista) return;
+    let dragSrc = null;
+
+    lista.addEventListener("dragstart", e => {
+        dragSrc = e.target.closest(".eval-row");
+        if (!dragSrc) return;
+        dragSrc.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+    });
+    lista.addEventListener("dragover", e => {
+        e.preventDefault();
+        const target = e.target.closest(".eval-row");
+        if (!target || target === dragSrc) return;
+        const rows = [...lista.querySelectorAll(".eval-row")];
+        const srcIdx = rows.indexOf(dragSrc);
+        const tgtIdx = rows.indexOf(target);
+        if (srcIdx < tgtIdx) target.after(dragSrc);
+        else target.before(dragSrc);
+    });
+    lista.addEventListener("dragend", async () => {
+        if (dragSrc) dragSrc.classList.remove("dragging");
+        dragSrc = null;
+        const order = [...lista.querySelectorAll(".eval-row")].map(r => parseInt(r.dataset.id));
+        await apiFetch(`${API}/evaluaciones/reorder`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order }),
+        });
+        cargarNotas(seccionId);
     });
 }
 
@@ -470,6 +602,32 @@ function initObservaciones() {
     });
 }
 
+function abrirPopupEditObs(id, current, studentId) {
+    document.getElementById("edit-obs-content").value = current;
+    document.getElementById("msg-edit-obs").textContent = "";
+    const popup = document.getElementById("popup-edit-obs");
+    popup.classList.add("active");
+
+    const close = () => popup.classList.remove("active");
+    document.getElementById("close-popup-edit-obs").onclick = close;
+    document.getElementById("btn-cancelar-edit-obs").onclick = close;
+    popup.onclick = e => { if (e.target === popup) close(); };
+
+    document.getElementById("btn-confirmar-edit-obs").onclick = async () => {
+        const nuevo = document.getElementById("edit-obs-content").value.trim();
+        const msg = document.getElementById("msg-edit-obs");
+        if (!nuevo) { msg.textContent = "La observación no puede estar vacía."; return; }
+        if (nuevo === current) { close(); return; }
+        const res = await apiFetch(`${API}/observaciones/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: nuevo }),
+        });
+        if (res?.ok) { close(); cargarObservaciones(studentId); }
+        else msg.textContent = res?.error ?? "Error al guardar.";
+    };
+}
+
 async function cargarObservaciones(studentId) {
     const data = await apiFetch(`${API}/alumnos/${studentId}/observaciones`);
     if (!data) return;
@@ -510,19 +668,10 @@ async function cargarObservaciones(studentId) {
         <h4 style="margin:16px 0 10px;color:#c0392b">Observaciones Psicológicas</h4>${psicHtml}`;
 
     wrap.querySelectorAll(".btn-edit-obs").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            const id = btn.dataset.id;
+        btn.addEventListener("click", () => {
             const item = btn.closest(".obs-item");
             const current = item.querySelector(".obs-text").textContent;
-            const nuevo = prompt("Editar observación:", current);
-            if (!nuevo || nuevo === current) return;
-            const res = await apiFetch(`${API}/observaciones/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: nuevo }),
-            });
-            if (res?.ok) cargarObservaciones(studentId);
-            else pedirConfirm({ titulo: "Error", msg: res?.error ?? "Error.", icono: "❌", labelOk: "Entendido", onConfirm: () => { } });
+            abrirPopupEditObs(btn.dataset.id, current, studentId);
         });
     });
 
@@ -619,11 +768,13 @@ function initPopupNuevaAsesoria() {
 
     // ── Abrir popup ──
     document.getElementById("btn-nueva-asesoria").addEventListener("click", async () => {
-        const ahora = new Date();
-        ahora.setSeconds(0, 0);
-        const minStr = ahora.toISOString().slice(0, 16);
-        document.getElementById("asesoria-inicio").min = minStr;
-        document.getElementById("asesoria-fin").min = minStr;
+        const ahora = redondearA15(new Date());
+        const minStr = toLocalDatetimeValue(ahora);
+        const endsEl = document.getElementById("asesoria-fin");
+        document.getElementById("asesoria-inicio").value = minStr;
+        endsEl.value = toLocalDatetimeValue(new Date(ahora.getTime() + 2 * 60 * 60 * 1000));
+        endsEl.min = minStr;
+        endsEl.dataset.durMs = String(2 * 60 * 60 * 1000);
         document.getElementById("msg-nueva-asesoria").textContent = "";
         alumnosSeleccionados = [];
         inputBuscar.value = "";
@@ -637,6 +788,11 @@ function initPopupNuevaAsesoria() {
         popup.classList.add("active");
     });
 
+
+    document.getElementById("asesoria-inicio").addEventListener("change", () =>
+        sincronizarFin("asesoria-inicio", "asesoria-fin", "starts"));
+    document.getElementById("asesoria-fin").addEventListener("change", () =>
+        sincronizarFin("asesoria-inicio", "asesoria-fin", "ends"));
     document.getElementById("close-popup-nueva-asesoria").addEventListener("click",
         () => popup.classList.remove("active"));
     popup.addEventListener("click", e => {
@@ -645,15 +801,20 @@ function initPopupNuevaAsesoria() {
 
     // ── Guardar ──
     document.getElementById("btn-guardar-asesoria").addEventListener("click", async () => {
-        const starts_at = document.getElementById("asesoria-inicio").value;
-        const ends_at = document.getElementById("asesoria-fin").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("asesoria-inicio").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("asesoria-fin").value);
         const capacity = document.getElementById("asesoria-cupo").value;
         const location = document.getElementById("asesoria-lugar").value;
         const msg = document.getElementById("msg-nueva-asesoria");
 
         if (!starts_at || !ends_at) { msg.textContent = "Complete fecha de inicio y fin."; return; }
-        if (new Date(starts_at) < new Date()) { msg.textContent = "La fecha de inicio no puede ser en el pasado."; return; }
-        if (new Date(ends_at) <= new Date(starts_at)) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
+        const ahoraMs = Date.now();
+        const inicioMs = new Date(starts_at).getTime();
+        const finMs = new Date(ends_at).getTime();
+        const UNA_HORA = 60 * 60 * 1000;
+        if (inicioMs < ahoraMs - UNA_HORA) { msg.textContent = "El inicio no puede ser más de 1 hora en el pasado."; return; }
+        if (finMs <= ahoraMs) { msg.textContent = "La asesoría ya habrá terminado. Ajusta la hora de fin."; return; }
+        if (finMs <= inicioMs) { msg.textContent = "El fin debe ser posterior al inicio."; return; }
 
         // Crear el slot con todos los alumnos de una sola vez
         const res = await apiFetch(`${API}/asesorias`, {
@@ -736,8 +897,8 @@ function initPopupEditarAsesoria() {
         if (e.target === popup) popup.classList.remove("active");
     });
     document.getElementById("btn-confirmar-editar-asesoria").addEventListener("click", async () => {
-        const starts_at = document.getElementById("edit-asesoria-inicio").value;
-        const ends_at = document.getElementById("edit-asesoria-fin").value;
+        const starts_at = toLocalISOWithOffset(document.getElementById("edit-asesoria-inicio").value);
+        const ends_at = toLocalISOWithOffset(document.getElementById("edit-asesoria-fin").value);
         const capacity = document.getElementById("edit-asesoria-cupo").value;
         const location = document.getElementById("edit-asesoria-lugar").value;
         const msg = document.getElementById("msg-editar-asesoria");
@@ -759,8 +920,22 @@ function initPopupEditarAsesoria() {
 
 function abrirEditarAsesoria({ id, starts, ends, capacity, location, reservas }) {
     asesoriaEditId = id;
-    document.getElementById("edit-asesoria-inicio").value = (starts ?? "").slice(0, 16);
-    document.getElementById("edit-asesoria-fin").value = (ends ?? "").slice(0, 16);
+    const editStartsEl = document.getElementById("edit-asesoria-inicio");
+    const editEndsEl = document.getElementById("edit-asesoria-fin");
+    // slice(0,16) da "YYYY-MM-DD HH:MM" — el datetime-local lo acepta directo sin parsear
+    editStartsEl.value = starts ? starts.slice(0, 16) : "";
+    editEndsEl.value = ends ? ends.slice(0, 16) : "";
+    editEndsEl.min = starts ? starts.slice(0, 16) : "";
+    if (starts && ends) {
+        const durMs = new Date(ends.replace(" ", "T")).getTime() - new Date(starts.replace(" ", "T")).getTime();
+        if (durMs > 0) editEndsEl.dataset.durMs = String(durMs);
+    }
+    const newSt = editStartsEl.cloneNode(true);
+    const newEn = editEndsEl.cloneNode(true);
+    editStartsEl.parentNode.replaceChild(newSt, editStartsEl);
+    editEndsEl.parentNode.replaceChild(newEn, editEndsEl);
+    newSt.addEventListener("change", () => sincronizarFin("edit-asesoria-inicio", "edit-asesoria-fin", "starts"));
+    newEn.addEventListener("change", () => sincronizarFin("edit-asesoria-inicio", "edit-asesoria-fin", "ends"));
     document.getElementById("edit-asesoria-cupo").value = capacity ?? 5;
     document.getElementById("edit-asesoria-lugar").value = location ?? "";
     document.getElementById("msg-editar-asesoria").textContent = "";

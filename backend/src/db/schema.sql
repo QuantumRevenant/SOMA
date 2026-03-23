@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
   template_id         INT NULL,
   name                VARCHAR(100) NOT NULL,
   weight              DECIMAL(5,2) NOT NULL,
+  position            INT NOT NULL DEFAULT 0,
   FOREIGN KEY (course_section_id) REFERENCES course_sections(id),
   FOREIGN KEY (template_id)       REFERENCES evaluation_templates(id)
 );
@@ -239,7 +240,10 @@ INSERT IGNORE INTO users (email, password, role, full_name) VALUES
   ('psicologo@soma.edu',   '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'psicologo',    'María Psicóloga'),
   ('estudiante@soma.edu',  '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Luis Estudiante'),
   ('estudiante2@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Ana Estudiante'),
-  ('estudiante3@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Pedro Estudiante');
+  ('estudiante3@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Pedro Estudiante'),
+  ('estudiante4@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Carla Estudiante'),
+  ('estudiante5@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Jorge Estudiante'),
+  ('estudiante6@soma.edu', '$2a$10$M0cKElr.7X9wonS1Q8yVw.cnzLxbbNQZDQ6.vVy6590/0fG0dkWNu', 'estudiante',   'Sofía Estudiante');
 
 -- Periodos: uno pasado, uno activo
 INSERT IGNORE INTO periods (year, type, label, is_active, starts_at, ends_at) VALUES
@@ -291,34 +295,34 @@ INSERT IGNORE INTO enrollments (student_id, course_section_id) VALUES
   (7, 2), (7, 3), (7, 4);   -- Pedro: INF101, COM101, FIS101 (actual)
 
 -- Evaluaciones MAT101-A actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (1, 1, 'Práctica Calificada 1', 15.00),
-  (1, 2, 'Práctica Calificada 2', 15.00),
-  (1, 3, 'Examen Parcial',        30.00),
-  (1, 4, 'Examen Final',          40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (1, 1, 'Práctica Calificada 1', 15.00, 0),
+  (1, 2, 'Práctica Calificada 2', 15.00, 1),
+  (1, 3, 'Examen Parcial',        30.00, 2),
+  (1, 4, 'Examen Final',          40.00, 3);
 
 -- Evaluaciones INF101-A actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (2, 5, 'Tarea Académica', 10.00),
-  (2, 6, 'Práctica 1',      20.00),
-  (2, 7, 'Examen Parcial',  30.00),
-  (2, 8, 'Proyecto Final',  40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (2, 5, 'Tarea Académica', 10.00, 0),
+  (2, 6, 'Práctica 1',      20.00, 1),
+  (2, 7, 'Examen Parcial',  30.00, 2),
+  (2, 8, 'Proyecto Final',  40.00, 3);
 
 -- Evaluaciones FIS101-B actual
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (4, 9,  'Laboratorio 1',  20.00),
-  (4, 10, 'Examen Parcial', 40.00),
-  (4, 11, 'Examen Final',   40.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (4, 9,  'Laboratorio 1',  20.00, 0),
+  (4, 10, 'Examen Parcial', 40.00, 1),
+  (4, 11, 'Examen Final',   40.00, 2);
 
 -- Evaluaciones MAT101-A pasado (libres, sin template)
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (5, NULL, 'Examen Parcial', 40.00),
-  (5, NULL, 'Examen Final',   60.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (5, NULL, 'Examen Parcial', 40.00, 0),
+  (5, NULL, 'Examen Final',   60.00, 1);
 
 -- Evaluaciones COM101-A pasado
-INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight) VALUES
-  (6, NULL, 'Trabajo Grupal', 40.00),
-  (6, NULL, 'Examen Final',   60.00);
+INSERT IGNORE INTO evaluations (course_section_id, template_id, name, weight, position) VALUES
+  (6, NULL, 'Trabajo Grupal', 40.00, 0),
+  (6, NULL, 'Examen Final',   60.00, 1);
 
 -- Notas ciclo actual (Luis: enrollment 1=MAT101, 2=INF101, 3=FIS101)
 INSERT IGNORE INTO grades (enrollment_id, evaluation_id, score, recorded_at) VALUES
@@ -348,23 +352,88 @@ INSERT IGNORE INTO attendance (enrollment_id, date, status, recorded_by) VALUES
   (6, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'ausente',  2),
   (6, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'presente', 2);
 
--- Slots de asesoría (Carlos Docente) — próximas semanas
+-- Slots de asesoría (Carlos Docente) — próximas semanas, horas en bloques de 15 min
 -- slot 1: cap 2, lleno (Luis + Ana)
 -- slot 2: cap 3, 1 libre (Luis + Pedro)
 -- slot 3 y 4: cap 5, libres
 INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 2  DAY), DATE_ADD(NOW(), INTERVAL 2  DAY) + INTERVAL 2 HOUR, 2, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 5  DAY), DATE_ADD(NOW(), INTERVAL 5  DAY) + INTERVAL 2 HOUR, 3, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 9  DAY), DATE_ADD(NOW(), INTERVAL 9  DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204'),
-  (2, 'asesoria', DATE_ADD(NOW(), INTERVAL 12 DAY), DATE_ADD(NOW(), INTERVAL 12 DAY) + INTERVAL 2 HOUR, 5, 'Aula B-204');
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 2  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 2  DAY)), ' 12:00:00'),
+    2, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 5  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 5  DAY)), ' 12:00:00'),
+    3, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 9  DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 9  DAY)), ' 12:00:00'),
+    5, 'Aula B-204'),
+  (2, 'asesoria',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 12 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 12 DAY)), ' 12:00:00'),
+    5, 'Aula B-204');
 
--- Slots de cita psicológica (María Psicóloga) — próximas semanas
+-- Slots de cita psicológica (María Psicóloga) — próximas semanas, horas en bloques de 15 min
 INSERT IGNORE INTO slots (owner_id, type, starts_at, ends_at, capacity, location) VALUES
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 1  DAY), DATE_ADD(NOW(), INTERVAL 1  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 3  DAY), DATE_ADD(NOW(), INTERVAL 3  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 6  DAY), DATE_ADD(NOW(), INTERVAL 6  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 8  DAY), DATE_ADD(NOW(), INTERVAL 8  DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3'),
-  (4, 'cita_psicologica', DATE_ADD(NOW(), INTERVAL 10 DAY), DATE_ADD(NOW(), INTERVAL 10 DAY) + INTERVAL 1 HOUR, 1, 'Consultorio 3');
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 1  DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 1  DAY)), ' 10:00:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 3  DAY)), ' 10:30:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 3  DAY)), ' 11:30:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 6  DAY)), ' 14:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 6  DAY)), ' 15:00:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 8  DAY)), ' 09:30:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 8  DAY)), ' 10:30:00'),
+    1, 'Consultorio 3'),
+  (4, 'cita_psicologica',
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 10 DAY)), ' 11:00:00'),
+    CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 10 DAY)), ' 12:00:00'),
+    1, 'Consultorio 3');
+
+-- Slots pasados para testear agrupación temporal del psicólogo
+INSERT IGNORE INTO slots (id, owner_id, type, starts_at, ends_at, capacity, location) VALUES
+  -- Último mes: ~5 días atrás
+  (20, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 5  DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 5  DAY)), ' 10:00:00'),
+    1, 'Consultorio 3'),
+  -- Último mes: ~15 días atrás
+  (21, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 15 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 15 DAY)), ' 11:00:00'),
+    1, 'Consultorio 3'),
+  -- Último mes: ~25 días atrás
+  (22, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 25 DAY)), ' 11:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 25 DAY)), ' 12:00:00'),
+    1, 'Consultorio 3'),
+  -- Últimos 3 meses: ~45 días atrás
+  (23, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 45 DAY)), ' 14:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 45 DAY)), ' 15:00:00'),
+    1, 'Consultorio 3'),
+  -- Últimos 3 meses: ~75 días atrás
+  (24, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 75 DAY)), ' 09:30:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 75 DAY)), ' 10:30:00'),
+    1, 'Consultorio 3'),
+  -- Más de 3 meses: ~120 días atrás
+  (25, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 120 DAY)), ' 10:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 120 DAY)), ' 11:00:00'),
+    1, 'Consultorio 3'),
+  -- Más de 3 meses: ~200 días atrás
+  (26, 4, 'cita_psicologica',
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 200 DAY)), ' 09:00:00'),
+    CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 200 DAY)), ' 10:00:00'),
+    1, 'Consultorio 3');
 
 -- Reservas de asesorías
 INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
@@ -372,21 +441,32 @@ INSERT IGNORE INTO slot_bookings (slot_id, student_id, status) VALUES
   (1, 6, 'confirmada'),  -- Ana   en asesoría +2 días (slot cap=2, LLENO)
   (2, 5, 'confirmada'),  -- Luis  en asesoría +5 días (slot cap=3, quedan 1)
   (2, 7, 'confirmada'),  -- Pedro en asesoría +5 días (slot cap=3, quedan 1)
-  (5, 5, 'confirmada');  -- Luis  en cita psicológica +1 día
+  (5, 5, 'confirmada'),  -- Luis  en cita psicológica +1 día
+  -- Seeds temporales pasados (IDs 5=Luis, 6=Ana, 7=Pedro, 8=Carla, 9=Jorge, 10=Sofía)
+  (20, 5, 'confirmada'), -- Luis   hace  5 días  → último mes
+  (21, 6, 'confirmada'), -- Ana    hace 15 días  → último mes
+  (22, 8, 'confirmada'), -- Carla  hace 25 días  → último mes
+  (23, 7, 'confirmada'), -- Pedro  hace 45 días  → últimos 3 meses
+  (24, 9, 'confirmada'), -- Jorge  hace 75 días  → últimos 3 meses
+  (25, 10,'confirmada'), -- Sofía  hace 120 días → más de 3 meses
+  (26, 8, 'confirmada'); -- Carla  hace 200 días → más de 3 meses (segunda cita)
 
--- Talleres futuros
+-- Talleres futuros — horas en bloques de 15 min
 INSERT IGNORE INTO workshops (coordinator_id, title, description, expositor, starts_at, ends_at, capacity, location) VALUES
   (1, 'Taller de Gestión del Tiempo',
    'Estrategias para organizar el estudio universitario', 'Carlos Docente',
-   DATE_ADD(NOW(), INTERVAL 4 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY) + INTERVAL 3 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 4  DAY)), ' 09:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 4  DAY)), ' 12:00:00'),
    30, 'Auditorio Principal'),
   (1, 'Taller de Técnicas de Estudio',
    'Métodos de aprendizaje activo y mapas mentales', 'Dra. Patricia Ríos (externa)',
-   DATE_ADD(NOW(), INTERVAL 11 DAY), DATE_ADD(NOW(), INTERVAL 11 DAY) + INTERVAL 3 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 11 DAY)), ' 14:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 11 DAY)), ' 17:00:00'),
    25, 'Sala de Conferencias B'),
   (1, 'Manejo del Estrés Universitario',
    'Herramientas para afrontar la presión académica', 'María Psicóloga',
-   DATE_ADD(NOW(), INTERVAL 18 DAY), DATE_ADD(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR,
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 18 DAY)), ' 10:00:00'),
+   CONCAT(DATE(DATE_ADD(NOW(), INTERVAL 18 DAY)), ' 12:00:00'),
    20, 'Auditorio Principal');
 
 -- Luis inscrito en primer taller

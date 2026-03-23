@@ -134,17 +134,7 @@
   </div>
 
   <!-- Popup: Confirmación reutilizable -->
-  <div class="popup" id="popup-confirm">
-    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
-      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
-      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
-      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
-        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Popup: Perfil alumno -->
   <div class="popup" id="popup-alumno">
@@ -245,11 +235,11 @@
         </div>
         <div class="form-group">
           <label>Inicio</label>
-          <input type="datetime-local" id="tal-starts">
+          <input type="datetime-local" id="tal-starts" step="900">
         </div>
         <div class="form-group">
           <label>Fin</label>
-          <input type="datetime-local" id="tal-ends">
+          <input type="datetime-local" id="tal-ends" step="900">
         </div>
         <div class="form-group">
           <label>Capacidad</label>
@@ -274,6 +264,21 @@
     </div>
   </div>
 
+  <!-- popup-confirm al final del DOM para z-index superior -->
+  <div class="popup" id="popup-confirm" style="z-index:1100">
+    <div class="popup-content" style="max-width:380px;text-align:center;padding:32px 28px">
+      <div id="confirm-icon" style="font-size:48px;margin-bottom:12px;line-height:1"></div>
+      <h3 id="confirm-titulo" style="margin-bottom:8px">¿Confirmar acción?</h3>
+      <p id="confirm-msg" style="color:#555;font-size:14px;margin-bottom:20px;line-height:1.5"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" id="btn-confirm-ok">Confirmar</button>
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Volver</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/pages/coordinador/coordinador.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../js/chat-widget.js"></script>
 </body>
 </html>
